@@ -2,7 +2,7 @@ package com.javimartd.test
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
 import com.javimartd.test.model.People
@@ -15,6 +15,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,8 +26,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         buttonMakeRequest.setOnClickListener {
-            //makeRequestUsingKotlin()
             makeRequestUsingRxJava()
+
+            /*Observable.just("1", "2", "3")
+                .subscribe { textResponse.text = "${textResponse.text}\n$it"}*/
         }
     }
 
@@ -52,14 +55,20 @@ class MainActivity : AppCompatActivity() {
         They both cannot be called, only one will be called. If an error occurs, onError gets called, if
         an observable completes without error, onCompleted will get called.
          */
+
         subscription = getPeopleObservable()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ showResult(it) }, { showError(it) })
+
+        /*subscription = Observable.fromCallable { getPeople() }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ showResult(it) }, { showError(it) })*/
     }
 
     private fun showError(it: Throwable?) {
-        Log.e(MainActivity::class.java.simpleName, it?.message)
+        Toast.makeText(this, it?.message, Toast.LENGTH_LONG).show()
     }
 
     private fun showResult(it: People?) {
@@ -76,7 +85,22 @@ class MainActivity : AppCompatActivity() {
         it's created, not when the operator has been subscribed to. We don't want that because for example the
         execution would happen on the main thread and block the UI.
 
+        We describe how you can easily take any expensive method and wrap the call inside an RxJava Observable using
+        the defer() operator. You can use Observable.defer() to wrap any method in an Observable so that we
+        can defer the execution of an expensive method until the correct time, and so that we can control which
+        threads are used to execute the method.
+
         return Observable.just(getPeople())
+         */
+
+        /*
+        fromCallable/defer
+        The operators are very similar and both can be used to solve the same type of problem: converting an
+        expensive method call into an RxJava Observable.
+
+        fromCallable can result in writing less code and provides better error handling.
+
+        return Observable.fromCallable { getPeople() }
          */
 
         /*
@@ -84,6 +108,15 @@ class MainActivity : AppCompatActivity() {
         of the observable until we have someone who subscribes to it.
          */
         return Observable.defer { Observable.just(getPeople()) }
+    }
+
+    private fun getPeopleWithTryCatch(): Observable<People> {
+        return try {
+            Observable.just(getPeople())
+        } catch (e: IOException) {
+            //How the onError of a subscriber gets called via the Observable.error() method
+            Observable.error(e)
+        }
     }
 
     private fun makeRequestUsingKotlin() {

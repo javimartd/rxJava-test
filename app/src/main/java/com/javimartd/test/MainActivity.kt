@@ -1,13 +1,16 @@
 package com.javimartd.test
 
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
+import com.javimartd.test.model.CombinePeople
 import com.javimartd.test.model.People
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
+import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
@@ -28,7 +31,8 @@ class MainActivity : AppCompatActivity() {
         buttonMakeRequest.setOnClickListener {
             textResponse.text = ""
 
-            makeRequestUsingDeferOperator()
+            //makeRequestUsingDeferOperator()
+            makeRequestUsingZipOperator()
         }
     }
 
@@ -85,6 +89,31 @@ class MainActivity : AppCompatActivity() {
             .subscribe({ showResult(it) }, { showError(it) })
     }
 
+    private fun makeRequestUsingZipOperator() {
+        /*
+        You'll need to perform two ways synchronous operations at the same time and only when both of
+        them are complete, can you move forward with the execution of the program.
+
+        This operator allows you to combine a set of items that have been emitted by two or more observables via a
+        special function. When that happens the zip operator will emit the items based upon this function.
+         */
+        subscription = Observable.zip(
+            getPeople2Observable(),
+            getPeopleObservable(),
+            object : BiFunction<People, People, CombinePeople> {
+            override fun apply(s: People, s2: People): CombinePeople {
+                return CombinePeople(s.name + " " + s2.name)
+            }
+        })
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+            { showResult(it) },
+            { showError(it) },
+            { Log.d("ZipOperator", "onComplete") },
+            { Log.d("ZipOperator", "onSubscribe") })
+    }
+
     private fun makeRequestUsingJustOperator() {
         subscription = Observable.just("1", "2", "3")
             .subscribe { textResponse.text = "${textResponse.text}\n$it"}
@@ -133,7 +162,7 @@ class MainActivity : AppCompatActivity() {
         return try {
             Observable.just(getPeople())
         } catch (e: IOException) {
-            //How the onError of a subscriber gets called via the Observable.error() method
+            // how the onError of a subscriber gets called via the Observable.error() method
             Observable.error(e)
         }
     }
@@ -144,6 +173,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun showResult(it: People?) {
         textResponse.text = it?.name
+    }
+
+    private fun showResult(it: CombinePeople?) {
+        textResponse.text = it?.compoundName
     }
 
     private fun makeRequestUsingKotlin() {

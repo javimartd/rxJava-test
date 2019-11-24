@@ -1,6 +1,5 @@
 package com.javimartd.test
 
-import android.annotation.SuppressLint
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,6 +16,7 @@ import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
 import java.io.IOException
 
+
 class MainActivity : AppCompatActivity() {
 
     lateinit var subscription: Disposable
@@ -26,10 +26,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         buttonMakeRequest.setOnClickListener {
-            makeRequestUsingRxJava()
+            textResponse.text = ""
 
-            /*Observable.just("1", "2", "3")
-                .subscribe { textResponse.text = "${textResponse.text}\n$it"}*/
+            makeRequestUsingDeferOperator()
         }
     }
 
@@ -44,8 +43,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("CheckResult")
-    private fun makeRequestUsingRxJava() {
+    private fun makeRequestUsingDeferOperator() {
         /*
         A subscriber is something that subscribes to whatever the observable is returning.
         It's like saying hey observable let me know when you get something via the onNext(), when you
@@ -55,24 +53,41 @@ class MainActivity : AppCompatActivity() {
         They both cannot be called, only one will be called. If an error occurs, onError gets called, if
         an observable completes without error, onCompleted will get called.
          */
-
         subscription = getPeopleObservable()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ showResult(it) }, { showError(it) })
+    }
 
-        /*subscription = Observable.fromCallable { getPeople() }
+    private fun makeRequestUsingFromCallableOperator() {
+        subscription = Observable.fromCallable { getPeople() }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({ showResult(it) }, { showError(it) })*/
+            .subscribe({ showResult(it) }, { showError(it) })
     }
 
-    private fun showError(it: Throwable?) {
-        Toast.makeText(this, it?.message, Toast.LENGTH_LONG).show()
+    private fun makeRequestUsingAmbOperator() {
+        /*
+        Is used when you have two or more observables that they are going to return the same type but
+        you just wanna be notified as soon as the first one start emitting items.
+
+        AMB subscribes both at the same time and waits for the first one to emit.
+
+        If any of the operators are blocking, the other operators will get blocked and will not executed
+        and that blocking operation will complete, emitting that item. This defeats the purpose of AMB.
+
+        So that means that all of your parameters to amb, whick are observables, need to be asynchronous
+        for amb to work correctly.
+         */
+        subscription = Observable.ambArray(getPeopleObservable(), getPeople2Observable())
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ showResult(it) }, { showError(it) })
     }
 
-    private fun showResult(it: People?) {
-        textResponse.text = it?.name
+    private fun makeRequestUsingJustOperator() {
+        subscription = Observable.just("1", "2", "3")
+            .subscribe { textResponse.text = "${textResponse.text}\n$it"}
     }
 
     private fun getPeopleObservable(): Observable<People> {
@@ -110,6 +125,10 @@ class MainActivity : AppCompatActivity() {
         return Observable.defer { Observable.just(getPeople()) }
     }
 
+    private fun getPeople2Observable(): Observable<People> {
+        return Observable.defer { Observable.just(getPeople2()) }
+    }
+
     private fun getPeopleWithTryCatch(): Observable<People> {
         return try {
             Observable.just(getPeople())
@@ -117,6 +136,14 @@ class MainActivity : AppCompatActivity() {
             //How the onError of a subscriber gets called via the Observable.error() method
             Observable.error(e)
         }
+    }
+
+    private fun showError(it: Throwable?) {
+        Toast.makeText(this, it?.message, Toast.LENGTH_LONG).show()
+    }
+
+    private fun showResult(it: People?) {
+        textResponse.text = it?.name
     }
 
     private fun makeRequestUsingKotlin() {
@@ -133,6 +160,20 @@ class MainActivity : AppCompatActivity() {
         val client = OkHttpClient()
         val request: Request = Request.Builder()
             .url("https://swapi.co/api/people/1")
+            .build()
+        val response = client.newCall(request).execute()
+
+        var people: People? = null
+        if (response.isSuccessful) {
+            people = Gson().fromJson<People>(response.body()?.charStream(), People::class.java)
+        }
+        return people
+    }
+
+    private fun getPeople2(): People? {
+        val client = OkHttpClient()
+        val request: Request = Request.Builder()
+            .url("https://swapi.co/api/people/2")
             .build()
         val response = client.newCall(request).execute()
 

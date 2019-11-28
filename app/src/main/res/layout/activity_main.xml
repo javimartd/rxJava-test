@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
-        android:text="MAKE REQUEST"
+        android:text="Make request"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
 
@@ -24,7 +24,19 @@
         android:layout_marginTop="16dp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="@+id/buttonMakeRequest"
-        tools:text="RESPONSE"
-        app:layout_constraintTop_toBottomOf="@+id/buttonMakeRequest"/>
+        app:layout_constraintTop_toBottomOf="@+id/buttonMakeRequest"
+        tools:text="response"/>
+
+    <Button
+        android:id="@+id/buttonStartActivity"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:text="Start Activity"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -17,6 +17,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.uiThread
 import retrofit2.Call
 import retrofit2.Callback
@@ -39,6 +40,7 @@ class MainActivity : AppCompatActivity() {
             textResponse.text = ""
             makeSimpleRequestUsingRetrofitAndRxJava()
         }
+        buttonStartActivity.setOnClickListener { startActivity<SecondActivity>() }
     }
 
     override fun onDestroy() {

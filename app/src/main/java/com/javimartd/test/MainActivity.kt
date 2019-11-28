@@ -8,6 +8,7 @@ import com.google.gson.Gson
 import com.javimartd.test.model.CombinePeople
 import com.javimartd.test.model.People
 import io.reactivex.Observable
+import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
@@ -17,12 +18,18 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.IOException
 
 
 class MainActivity : AppCompatActivity() {
 
-    lateinit var subscription: Disposable
+    lateinit var disposable: Disposable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,20 +37,16 @@ class MainActivity : AppCompatActivity() {
 
         buttonMakeRequest.setOnClickListener {
             textResponse.text = ""
-
-            //makeRequestUsingDeferOperator()
-            makeRequestUsingZipOperator()
+            makeSimpleRequestUsingRetrofitAndRxJava()
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        /*
-        NOTE: A memory leak like this can be caused by observables which retain a copy of the Android context.
-        The problem commonly occurs when subscriptions are created that obtain a context somehow.
-         */
-        if (!subscription.isDisposed) {
-            subscription.dispose()
+        /* A memory leak like this can be caused by observables which retain a copy of the Android context.
+        The problem commonly occurs when subscriptions are created that obtain a context somehow. */
+        if (!disposable.isDisposed) {
+            disposable.dispose()
         }
     }
 
@@ -57,14 +60,14 @@ class MainActivity : AppCompatActivity() {
         They both cannot be called, only one will be called. If an error occurs, onError gets called, if
         an observable completes without error, onCompleted will get called.
          */
-        subscription = getPeopleObservable()
+        disposable = getPeopleObservable("1")
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ showResult(it) }, { showError(it) })
     }
 
     private fun makeRequestUsingFromCallableOperator() {
-        subscription = Observable.fromCallable { getPeople() }
+        disposable = Observable.fromCallable { getPeople("1") }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ showResult(it) }, { showError(it) })
@@ -83,7 +86,7 @@ class MainActivity : AppCompatActivity() {
         So that means that all of your parameters to amb, whick are observables, need to be asynchronous
         for amb to work correctly.
          */
-        subscription = Observable.ambArray(getPeopleObservable(), getPeople2Observable())
+        disposable = Observable.ambArray(getPeopleObservable("1"), getPeopleObservable("2"))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ showResult(it) }, { showError(it) })
@@ -97,9 +100,9 @@ class MainActivity : AppCompatActivity() {
         This operator allows you to combine a set of items that have been emitted by two or more observables via a
         special function. When that happens the zip operator will emit the items based upon this function.
          */
-        subscription = Observable.zip(
-            getPeople2Observable(),
-            getPeopleObservable(),
+        disposable = Observable.zip(
+            getPeopleObservable("1"),
+            getPeopleObservable("2"),
             object : BiFunction<People, People, CombinePeople> {
             override fun apply(s: People, s2: People): CombinePeople {
                 return CombinePeople(s.name + " " + s2.name)
@@ -115,11 +118,36 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun makeRequestUsingJustOperator() {
-        subscription = Observable.just("1", "2", "3")
-            .subscribe { textResponse.text = "${textResponse.text}\n$it"}
+        disposable = Observable.just(1,2,3)
+            .map { (it * 2).toString() }
+            .subscribe {item ->
+                // onNext
+                textResponse.text = "${textResponse.text}\n$item"
+                Log.d("JustOperator", item)
+            }
+
+        Observable.just(1,2,3)
+            .map { (it * 2).toString() }
+            .subscribe(object: Observer<String> {
+                override fun onComplete() {
+                    Log.d("JustOperator", "onSubscribe")
+                }
+
+                override fun onSubscribe(d: Disposable) {
+                    Log.d("JustOperator", "onSubscribe")
+                }
+
+                override fun onNext(t: String) {
+                    textResponse.text = "${textResponse.text}\n$t"
+                }
+
+                override fun onError(e: Throwable) {
+                    showError(e)
+                }
+            })
     }
 
-    private fun getPeopleObservable(): Observable<People> {
+    private fun getPeopleObservable(person: String): Observable<People> {
         /*
         Just operator says: whatever the value placed as the argument to observable.just is,I'll turn that into an observable.
         This operator calls the onNext method and then immediately completes via onCompleted.
@@ -151,20 +179,76 @@ class MainActivity : AppCompatActivity() {
         So we need to tell RxJava to defer the creation
         of the observable until we have someone who subscribes to it.
          */
-        return Observable.defer { Observable.just(getPeople()) }
-    }
-
-    private fun getPeople2Observable(): Observable<People> {
-        return Observable.defer { Observable.just(getPeople2()) }
+        return Observable.defer { Observable.just(getPeople(person)) }
     }
 
     private fun getPeopleWithTryCatch(): Observable<People> {
         return try {
-            Observable.just(getPeople())
+            Observable.just(getPeople("1"))
         } catch (e: IOException) {
             // how the onError of a subscriber gets called via the Observable.error() method
             Observable.error(e)
         }
+    }
+
+    private fun makeSimpleRequestUsingKotlin() {
+        doAsync {
+            val people = getPeople("1")
+            uiThread {
+                // Also we can use runOnUiThread { }
+                textResponse.text = people?.name
+            }
+        }
+    }
+
+    private fun getPeople(person: String): People? {
+        val client = OkHttpClient()
+        val request: Request = Request.Builder()
+            .url("https://swapi.co/api/people/$person")
+            .build()
+        val response = client.newCall(request).execute()
+
+        var people: People? = null
+        if (response.isSuccessful) {
+            people = Gson().fromJson<People>(response.body()?.charStream(), People::class.java)
+        }
+        return people
+    }
+
+    private fun makeSimpleRequestUsingRetrofitAndRxJava() {
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://swapi.co")
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        val service = retrofit.create(ApiService::class.java)
+
+        disposable = service.getPeopleObservable("1")
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ showResult(it)}, { showError(it) })
+    }
+
+    private fun makeSimpleRequestUsingRetrofit() {
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://swapi.co")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val service = retrofit.create(ApiService::class.java)
+
+        service.getPeople("1").enqueue(object: Callback<People> {
+            override fun onFailure(call: Call<People>, t: Throwable) {
+                Log.e("Retrofit", t.message)
+            }
+
+            override fun onResponse(call: Call<People>, response: Response<People>) {
+                Log.d("Retrofit", response.message())
+                if (response.isSuccessful) {
+                    textResponse.text = response.body()?.name
+                }
+            }
+        })
     }
 
     private fun showError(it: Throwable?) {
@@ -179,41 +263,28 @@ class MainActivity : AppCompatActivity() {
         textResponse.text = it?.compoundName
     }
 
-    private fun makeRequestUsingKotlin() {
-        doAsync {
-            val people = getPeople()
-            uiThread {
-                // Also we can use runOnUiThread { }
-                textResponse.text = people?.name
-            }
-        }
+    override fun onRestart() {
+        super.onRestart()
+        Log.i("MainActivity", "onRestart")
     }
 
-    private fun getPeople(): People? {
-        val client = OkHttpClient()
-        val request: Request = Request.Builder()
-            .url("https://swapi.co/api/people/1")
-            .build()
-        val response = client.newCall(request).execute()
-
-        var people: People? = null
-        if (response.isSuccessful) {
-            people = Gson().fromJson<People>(response.body()?.charStream(), People::class.java)
-        }
-        return people
+    override fun onStart() {
+        super.onStart()
+        Log.i("MainActivity", "onStart")
     }
 
-    private fun getPeople2(): People? {
-        val client = OkHttpClient()
-        val request: Request = Request.Builder()
-            .url("https://swapi.co/api/people/2")
-            .build()
-        val response = client.newCall(request).execute()
+    override fun onResume() {
+        super.onResume()
+        Log.i("MainActivity", "onResume")
+    }
 
-        var people: People? = null
-        if (response.isSuccessful) {
-            people = Gson().fromJson<People>(response.body()?.charStream(), People::class.java)
-        }
-        return people
+    override fun onPause() {
+        super.onPause()
+        Log.i("MainActivity", "onPause")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.i("MainActivity", "onStop")
     }
 }

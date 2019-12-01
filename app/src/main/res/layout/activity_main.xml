@@ -27,6 +27,16 @@
         app:layout_constraintTop_toBottomOf="@+id/buttonMakeRequest"
         tools:text="response"/>
 
+    <TextView
+        android:id="@+id/textSecondResponse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="@+id/textResponse"
+        app:layout_constraintTop_toBottomOf="@+id/textResponse"
+        tools:text="second response" />
+
     <Button
         android:id="@+id/buttonStartActivity"
         android:layout_width="0dp"

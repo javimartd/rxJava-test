@@ -8,10 +8,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
 import com.javimartd.test.model.CombinePeople
 import com.javimartd.test.model.People
-import io.reactivex.Observable
-import io.reactivex.ObservableEmitter
-import io.reactivex.ObservableOnSubscribe
-import io.reactivex.Observer
+import com.javimartd.test.service.SwapiService
+import io.reactivex.*
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
@@ -62,10 +60,10 @@ class MainActivity : AppCompatActivity() {
         const val HOST = "https://swapi.co"
     }
 
+    private lateinit var disposable: Disposable
+
     private val numbers = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     private val alphabets = listOf("a", "b", "c", "d", "e", "f")
-
-    private lateinit var disposable: Disposable
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,7 +71,7 @@ class MainActivity : AppCompatActivity() {
 
         buttonMakeRequest.setOnClickListener {
             textResponse.text = ""
-            makeRequestUsingJustOperator()
+            flowableObservable()
         }
 
         buttonStartActivity.setOnClickListener(object: View.OnClickListener {
@@ -92,9 +90,179 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    //region TYPES OF OBSERVABLES
+    private fun singleObservable() {
+        /*
+        Single is an Observable that always emit only one value or throws an error.
+        A typical use case of Single observable would be when we make a network call in Android and receive a response.
+
+        We use a Single Observable and a Single Observer.
+        The Single Observer always emits only once so there is no onNext() .
+         */
+        val observable = Single.create(object: SingleOnSubscribe<People> {
+            override fun subscribe(emitter: SingleEmitter<People>) {
+                val people = People("Sofia", "Female")
+                emitter.onSuccess(people)
+            }
+        })
+
+        observable
+            .subscribe(object: SingleObserver<People> {
+                override fun onSubscribe(d: Disposable) {
+                    Log.i("single observable", "onSubscribe")
+                }
+                override fun onSuccess(t: People) {
+                    Log.i("single observable", t.toString())
+                    textResponse.text = t.toString()
+                }
+                override fun onError(e: Throwable) {
+                    Log.i("single observable", e.message)
+                }
+            })
+    }
+
+    private fun maybeObservable() {
+        /*
+        Maybe is an Observable that may or may not emit a value.
+        For example, we would like to know if a particular user exists in our db. The user may or may not exist.
+
+        We use a Maybe Observable and a Maybe Observer.
+         */
+        val observable = Maybe.create(object: MaybeOnSubscribe<People>{
+            override fun subscribe(emitter: MaybeEmitter<People>) {
+                val people = People("Sofia", "Female")
+                emitter.onSuccess(people)
+            }
+        })
+        observable.
+                subscribe(object : MaybeObserver<People>{
+                    override fun onSubscribe(d: Disposable) {
+                        Log.i("maybe observable", "onSubscribe")
+                    }
+
+                    override fun onSuccess(t: People) {
+                        Log.i("maybe observable", t.toString())
+                        textResponse.text = t.toString()
+                    }
+
+                    override fun onComplete() {
+                        Log.i("maybe observable", "onComplete")
+                    }
+
+                    override fun onError(e: Throwable) {
+                        Log.i("maybe observable", e.message)
+                    }
+                })
+
+    }
+
+    private fun completableObservable() {
+        /*
+        Completable does not emit any data, but rather is focused on the status of execution — whether successful or failure.
+
+        Since no data is emitted in Completable, there is no onNext() or onSuccess().
+        This scenario can be used in cases where PUT API is called and we need to update an existing object to the backend.
+         */
+        val observable = Completable.create(object : CompletableOnSubscribe {
+            override fun subscribe(emitter: CompletableEmitter) {
+                Thread.sleep(1000)
+                emitter.onComplete()
+            }
+        })
+
+        observable.
+                subscribe(object: CompletableObserver {
+                    override fun onSubscribe(d: Disposable) {
+                        Log.i("completable observable", "onSubscribe")
+                    }
+
+                    override fun onComplete() {
+                        Log.i("completable observable", "onComplete")
+                    }
+
+                    override fun onError(e: Throwable) {
+                        Log.i("completable observable", e.message)
+                    }
+                })
+    }
+
+    private fun flowableObservable() {
+        /*
+        Flowable is typically used when an Observable is emitting huge amounts of data but the Observer
+        is not able to handle this data emission. This is known as Back Pressure.
+
+        This sample provides a range of integers from 10 to 1000.
+        It uses the reduce() operator to add the sum of the integers and emit the final sum value.
+
+        0 + 1 = 1
+        1 + 2 = 3
+        3 + 3 = 6
+        6 + 4 = 10
+        10 + 5 = 15
+        15 + 6 = 21
+        21 + 7 = 28
+        28 + 8 = 36
+        36 + 9 = 45
+        45 + 10 = 55
+         */
+        val observable = Flowable.range(1, 10)
+            .reduce(object : BiFunction<Int, Int, Int>{
+                override fun apply(t1: Int, t2: Int): Int {
+                    return t1 + t2 // 55
+                }
+            })
+
+        observable
+            .subscribe(object : MaybeObserver<Int>{
+                override fun onSubscribe(d: Disposable) {
+                    Log.i("flowable observable", "onSubscribe")
+                }
+
+                override fun onSuccess(t: Int) {
+                    Log.i("flowable observable", t.toString())
+                    textResponse.text = t.toString()
+                }
+
+                override fun onComplete() {
+                    Log.i("flowable observable", "onComplete")
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.i("flowable observable", e.message)
+                }
+            })
+
+        // seed: the initial accumulator value
+        /*val observableWithSeed = Flowable.range(1, 10)
+            .reduce(2, object : BiFunction<Int, Int, Int>{
+                override fun apply(t1: Int, t2: Int): Int {
+                    return t1 + t2 // 57
+                }
+            })
+
+        observableWithSeed
+            .subscribe(object : SingleObserver<Int>{
+                override fun onSubscribe(d: Disposable) {
+                    Log.i("flowable observable", "onSubscribe")
+                }
+
+                override fun onSuccess(t: Int) {
+                    Log.i("flowable observable", t.toString())
+                    textResponse.text = t.toString()
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.i("flowable observable", e.message)
+                }
+            })*/
+    }
+    //endregion
+
+    //region OPERATORS
     private fun intervalOperator() {
         /*
-        Observable.interval() and Observable.timer() — timer() emits just a single item after a delay whereas
+        Observable.interval() and Observable.timer()
+        timer() emits just a single item after a delay whereas
         interval() operator, on the other hand, will emit items spaced out with a given interval.
          */
         Observable.interval(1, TimeUnit.SECONDS)
@@ -118,11 +286,14 @@ class MainActivity : AppCompatActivity() {
             })
     }
 
-    private fun createsOperator() {
+    private fun createOperator() {
         val observable = Observable.create(object : ObservableOnSubscribe<String> {
             override fun subscribe(emitter: ObservableEmitter<String>) {
                 try {
-                    alphabets.forEach { emitter.onNext(it) }
+                    alphabets.forEach {
+                        emitter.onNext(it)
+                    }
+                    emitter.onComplete()
                 } catch (e: Exception) {
                     emitter.onError(e)
                 }
@@ -131,22 +302,22 @@ class MainActivity : AppCompatActivity() {
 
         observable
             .subscribe(object : Observer<String> {
-            override fun onNext(s: String) {
-                Log.i("creates operator", s)
-            }
-            override fun onSubscribe(d: Disposable) {
-                Log.i("creates operator", "onSubscribe")
-            }
-            override fun onError(e: Throwable) {
-                Log.i("creates operator", e.message)
-            }
-            override fun onComplete() {
-                Log.i("creates operator", "onComplete")
-            }
+                override fun onSubscribe(d: Disposable) {
+                    Log.i("creates operator", "onSubscribe")
+                }
+                override fun onNext(s: String) {
+                    Log.i("creates operator", s)
+                }
+                override fun onError(e: Throwable) {
+                    Log.i("creates operator", e.message)
+                }
+                override fun onComplete() {
+                    Log.i("creates operator", "onComplete")
+                }
         })
     }
 
-    private fun makeRequestUsingDeferOperator() {
+    private fun deferOperator() {
         /*
         A subscriber is something that subscribes to whatever the observable is returning.
         It's like saying hey observable let me know when you get something via the onNext(), when you
@@ -156,7 +327,7 @@ class MainActivity : AppCompatActivity() {
         They both cannot be called, only one will be called. If an error occurs, onError gets called, if
         an observable completes without error, onCompleted will get called.
          */
-        disposable = getPeopleObservable("1")
+        disposable = getObservablePeople("1")
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
@@ -166,14 +337,14 @@ class MainActivity : AppCompatActivity() {
                 { showMessage("onSubscribe")})
     }
 
-    private fun makeRequestUsingFromCallableOperator() {
+    private fun fromCallableOperator() {
         disposable = Observable.fromCallable { getPeople("1") }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ showResult(it) }, { showError(it) })
     }
 
-    private fun makeRequestUsingAmbOperator() {
+    private fun ambOperator() {
         /*
         Is used when you have two or more observables that they are going to return the same type but
         you just wanna be notified as soon as the first one start emitting items.
@@ -186,13 +357,13 @@ class MainActivity : AppCompatActivity() {
         So that means that all of your parameters to amb, whick are observables, need to be asynchronous
         for amb to work correctly.
          */
-        disposable = Observable.ambArray(getPeopleObservable("1"), getPeopleObservable("2"))
+        disposable = Observable.ambArray(getObservablePeople("1"), getObservablePeople("2"))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ showResult(it) }, { showError(it) })
     }
 
-    private fun makeRequestUsingZipOperator() {
+    private fun zipOperator() {
         /*
         You'll need to perform two ways synchronous operations at the same time and only when both of
         them are complete, can you move forward with the execution of the program.
@@ -201,8 +372,8 @@ class MainActivity : AppCompatActivity() {
         special function. When that happens the zip operator will emit the items based upon this function.
          */
         disposable = Observable.zip(
-            getPeopleObservable("1"),
-            getPeopleObservable("2"),
+            getObservablePeople("1"),
+            getObservablePeople("2"),
             object : BiFunction<People, People, CombinePeople> {
             override fun apply(s: People, s2: People): CombinePeople {
                 return CombinePeople(s.name + " " + s2.name)
@@ -217,7 +388,7 @@ class MainActivity : AppCompatActivity() {
             { Log.d("ZipOperator", "onSubscribe") })
     }
 
-    private fun makeRequestUsingJustOperator() {
+    private fun justOperator() {
         /*
          This operator takes a list of arguments (maximum 10) and converts the items into Observable items. just()
          makes only 1 emission. For instance, If an array is passed as a parameter to the just() method, the
@@ -254,7 +425,7 @@ class MainActivity : AppCompatActivity() {
             })
     }
 
-    private fun getPeopleObservable(person: String): Observable<People> {
+    private fun getObservablePeople(person: String): Observable<People> {
         /*
         Just operator says: whatever the value placed as the argument to observable.just is,I'll turn that into an observable.
         This operator calls the onNext method and then immediately completes via onCompleted.
@@ -288,6 +459,7 @@ class MainActivity : AppCompatActivity() {
          */
         return Observable.defer { Observable.just(getPeople(person)) }
     }
+    //endregion
 
     private fun getPeopleWithTryCatch(): Observable<People> {
         return try {
@@ -298,7 +470,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun makeSimpleRequestUsingKotlin() {
+    private fun makeRequestSequentially() {
+        val retrofit = Retrofit.Builder()
+            .baseUrl(HOST)
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        val service = retrofit.create(SwapiService::class.java)
+
+        disposable = service.getObservablePeople("1")
+            .map { firstResponse -> "first response:" + firstResponse.name }
+            .flatMap { service.getObservablePeople("2") }
+            .map { result -> "second response: " + result.name }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { showResult(it) }
+    }
+
+    //region REQUEST
+    private fun makeRequestUsingKotlin() {
         doAsync {
             val people = getPeople("1")
             uiThread {
@@ -308,7 +498,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun makeSimpleRequestUsingRetrofitAndRxJava() {
+    private fun makeRequestUsingRetrofitAndRxJava() {
         val retrofit = Retrofit.Builder()
             .baseUrl(HOST)
                 /*
@@ -323,9 +513,9 @@ class MainActivity : AppCompatActivity() {
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-        val service = retrofit.create(ApiService::class.java)
+        val service = retrofit.create(SwapiService::class.java)
 
-        disposable = service.getPeopleObservable("1")
+        disposable = service.getObservablePeople("1")
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .doOnSubscribe {showMessage("doOnSubscribe")}
@@ -333,30 +523,13 @@ class MainActivity : AppCompatActivity() {
             .subscribe({ showResult(it)}, { showError(it) })
     }
 
-    private fun makeRequestSequentially() {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(HOST)
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        val service = retrofit.create(ApiService::class.java)
-
-        disposable = service.getPeopleObservable("1")
-            .map { firstResponse -> "first response:" + firstResponse.name }
-            .flatMap { service.getPeopleObservable("2") }
-            .map { result -> "second response: " + result.name }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { showResult(it) }
-    }
-
-    private fun makeSimpleRequestUsingRetrofit() {
+    private fun makeRequestUsingRetrofit() {
         val retrofit = Retrofit.Builder()
             .baseUrl(HOST)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
-        val service = retrofit.create(ApiService::class.java)
+        val service = retrofit.create(SwapiService::class.java)
 
         service.getPeople("1").enqueue(object: Callback<People> {
             override fun onFailure(call: Call<People>, t: Throwable) {
@@ -385,6 +558,7 @@ class MainActivity : AppCompatActivity() {
         }
         return people
     }
+    //endregion
 
     // region other methods
     private fun showMessage(message: String) {
@@ -432,4 +606,11 @@ class MainActivity : AppCompatActivity() {
         Log.i("MainActivity", "onStop")
     }
     //endregion
+
+    private fun test() {
+        val people = People("lucia", "female")
+        val people2 = People("lucia", "female")
+        val result = people.equals(people2)
+        textResponse.text = result.toString()
+    }
 }

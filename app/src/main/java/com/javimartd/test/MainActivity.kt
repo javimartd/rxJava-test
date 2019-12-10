@@ -6,10 +6,14 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
+import com.javimartd.Subjects
 import com.javimartd.test.model.CombinePeople
 import com.javimartd.test.model.People
 import com.javimartd.test.service.SwapiService
-import io.reactivex.*
+import io.reactivex.Observable
+import io.reactivex.ObservableEmitter
+import io.reactivex.ObservableOnSubscribe
+import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
@@ -71,7 +75,7 @@ class MainActivity : AppCompatActivity() {
 
         buttonMakeRequest.setOnClickListener {
             textResponse.text = ""
-            flowableObservable()
+            Subjects.unicastSubject()
         }
 
         buttonStartActivity.setOnClickListener(object: View.OnClickListener {
@@ -90,202 +94,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    //region TYPES OF OBSERVABLES
-    private fun singleObservable() {
-        /*
-        Single is an Observable that always emit only one value or throws an error.
-        A typical use case of Single observable would be when we make a network call in Android and receive a response.
-
-        We use a Single Observable and a Single Observer.
-        The Single Observer always emits only once so there is no onNext() .
-         */
-        val observable = Single.create(object: SingleOnSubscribe<People> {
-            override fun subscribe(emitter: SingleEmitter<People>) {
-                val people = People("Sofia", "Female")
-                emitter.onSuccess(people)
-            }
-        })
-
-        observable
-            .subscribe(object: SingleObserver<People> {
-                override fun onSubscribe(d: Disposable) {
-                    Log.i("single observable", "onSubscribe")
-                }
-                override fun onSuccess(t: People) {
-                    Log.i("single observable", t.toString())
-                    textResponse.text = t.toString()
-                }
-                override fun onError(e: Throwable) {
-                    Log.i("single observable", e.message)
-                }
-            })
-    }
-
-    private fun maybeObservable() {
-        /*
-        Maybe is an Observable that may or may not emit a value.
-        For example, we would like to know if a particular user exists in our db. The user may or may not exist.
-
-        We use a Maybe Observable and a Maybe Observer.
-         */
-        val observable = Maybe.create(object: MaybeOnSubscribe<People>{
-            override fun subscribe(emitter: MaybeEmitter<People>) {
-                val people = People("Sofia", "Female")
-                emitter.onSuccess(people)
-            }
-        })
-        observable.
-                subscribe(object : MaybeObserver<People>{
-                    override fun onSubscribe(d: Disposable) {
-                        Log.i("maybe observable", "onSubscribe")
-                    }
-
-                    override fun onSuccess(t: People) {
-                        Log.i("maybe observable", t.toString())
-                        textResponse.text = t.toString()
-                    }
-
-                    override fun onComplete() {
-                        Log.i("maybe observable", "onComplete")
-                    }
-
-                    override fun onError(e: Throwable) {
-                        Log.i("maybe observable", e.message)
-                    }
-                })
-
-    }
-
-    private fun completableObservable() {
-        /*
-        Completable does not emit any data, but rather is focused on the status of execution — whether successful or failure.
-
-        Since no data is emitted in Completable, there is no onNext() or onSuccess().
-        This scenario can be used in cases where PUT API is called and we need to update an existing object to the backend.
-         */
-        val observable = Completable.create(object : CompletableOnSubscribe {
-            override fun subscribe(emitter: CompletableEmitter) {
-                Thread.sleep(1000)
-                emitter.onComplete()
-            }
-        })
-
-        observable.
-                subscribe(object: CompletableObserver {
-                    override fun onSubscribe(d: Disposable) {
-                        Log.i("completable observable", "onSubscribe")
-                    }
-
-                    override fun onComplete() {
-                        Log.i("completable observable", "onComplete")
-                    }
-
-                    override fun onError(e: Throwable) {
-                        Log.i("completable observable", e.message)
-                    }
-                })
-    }
-
-    private fun flowableObservable() {
-        /*
-        Flowable is typically used when an Observable is emitting huge amounts of data but the Observer
-        is not able to handle this data emission. This is known as Back Pressure.
-
-        This sample provides a range of integers from 10 to 1000.
-        It uses the reduce() operator to add the sum of the integers and emit the final sum value.
-
-        0 + 1 = 1
-        1 + 2 = 3
-        3 + 3 = 6
-        6 + 4 = 10
-        10 + 5 = 15
-        15 + 6 = 21
-        21 + 7 = 28
-        28 + 8 = 36
-        36 + 9 = 45
-        45 + 10 = 55
-         */
-        val observable = Flowable.range(1, 10)
-            .reduce(object : BiFunction<Int, Int, Int>{
-                override fun apply(t1: Int, t2: Int): Int {
-                    return t1 + t2 // 55
-                }
-            })
-
-        observable
-            .subscribe(object : MaybeObserver<Int>{
-                override fun onSubscribe(d: Disposable) {
-                    Log.i("flowable observable", "onSubscribe")
-                }
-
-                override fun onSuccess(t: Int) {
-                    Log.i("flowable observable", t.toString())
-                    textResponse.text = t.toString()
-                }
-
-                override fun onComplete() {
-                    Log.i("flowable observable", "onComplete")
-                }
-
-                override fun onError(e: Throwable) {
-                    Log.i("flowable observable", e.message)
-                }
-            })
-
-        // seed: the initial accumulator value
-        /*val observableWithSeed = Flowable.range(1, 10)
-            .reduce(2, object : BiFunction<Int, Int, Int>{
-                override fun apply(t1: Int, t2: Int): Int {
-                    return t1 + t2 // 57
-                }
-            })
-
-        observableWithSeed
-            .subscribe(object : SingleObserver<Int>{
-                override fun onSubscribe(d: Disposable) {
-                    Log.i("flowable observable", "onSubscribe")
-                }
-
-                override fun onSuccess(t: Int) {
-                    Log.i("flowable observable", t.toString())
-                    textResponse.text = t.toString()
-                }
-
-                override fun onError(e: Throwable) {
-                    Log.i("flowable observable", e.message)
-                }
-            })*/
-    }
-    //endregion
-
     //region OPERATORS
-    private fun intervalOperator() {
-        /*
-        Observable.interval() and Observable.timer()
-        timer() emits just a single item after a delay whereas
-        interval() operator, on the other hand, will emit items spaced out with a given interval.
-         */
-        Observable.interval(1, TimeUnit.SECONDS)
-            .take(10)
-            .subscribe(object: Observer<Long>{
-                override fun onComplete() {
-                    Log.i("interval operator", "onComplete")
-                }
-
-                override fun onSubscribe(d: Disposable) {
-                    Log.i("interval operator", "onSubscribe")
-                }
-
-                override fun onNext(t: Long) {
-                    Log.i("interval operator", t.toString())
-                }
-
-                override fun onError(e: Throwable) {
-                    Log.i("interval operator", e.message)
-                }
-            })
-    }
-
     private fun createOperator() {
         val observable = Observable.create(object : ObservableOnSubscribe<String> {
             override fun subscribe(emitter: ObservableEmitter<String>) {
@@ -314,7 +123,59 @@ class MainActivity : AppCompatActivity() {
                 override fun onComplete() {
                     Log.i("creates operator", "onComplete")
                 }
-        })
+            })
+    }
+
+    private fun intervalOperator() {
+        /*
+        Observable.interval() and Observable.timer()
+        timer() emits just a single item after a delay whereas
+        interval() operator, on the other hand, will emit items spaced out with a given interval.
+         */
+        Observable.interval(1, TimeUnit.SECONDS)
+            .take(10)
+            .subscribe(object: Observer<Long>{
+                override fun onComplete() {
+                    Log.i("interval operator", "onComplete")
+                }
+
+                override fun onSubscribe(d: Disposable) {
+                    Log.i("interval operator", "onSubscribe")
+                }
+
+                override fun onNext(t: Long) {
+                    Log.i("interval operator", t.toString())
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.i("interval operator", e.message)
+                }
+            })
+    }
+
+    private fun rangeOperator() {
+        /*
+        This operator creates an Observable that emits a range of sequential integers.
+        The function takes two arguments: the starting number and length.
+         */
+        Observable.range(2,10)
+            .subscribe(object: Observer<Int>{
+                override fun onComplete() {
+                    Log.i("range operator", "onComplete")
+                }
+
+                override fun onSubscribe(d: Disposable) {
+                    Log.i("range operator", "onSubscribe")
+                }
+
+                override fun onNext(t: Int) {
+                    Log.i("range operator", t.toString())
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.i("range operator", e.message)
+                }
+            })
     }
 
     private fun deferOperator() {

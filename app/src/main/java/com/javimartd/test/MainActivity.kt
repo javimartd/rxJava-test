@@ -6,7 +6,6 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.gson.Gson
-import com.javimartd.Subjects
 import com.javimartd.test.model.CombinePeople
 import com.javimartd.test.model.People
 import com.javimartd.test.service.SwapiService
@@ -15,6 +14,7 @@ import io.reactivex.ObservableEmitter
 import io.reactivex.ObservableOnSubscribe
 import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
@@ -57,16 +57,36 @@ import java.util.concurrent.TimeUnit
     override fun onComplete() {}
     }
 
+ * A subscriber is something that subscribes to whatever the observable is returning.
+ * It's like saying hey observable let me know when you get something via the onNext(),
+ * when you error and when you're done via onCompleted()
+ *
+ * RxJava observables will either error out via onError or they will complete via onCompleted.
+ * They both cannot be called, only one will be called. If an error occurs, onError gets
+ * called, if an observable completes without error, onCompleted will get called.
  */
 class MainActivity : AppCompatActivity() {
 
     companion object {
         const val HOST = "https://swapi.co"
+        const val CREATE_OPERATOR = "create_operator"
+        const val DEFER_OPERATOR = "defer_operator"
+        const val INTERVAL_OPERATOR = "interval_operator"
+        const val FROM_OPERATOR = "from_operator"
+        const val JUST_OPERATOR = "just_operator"
+        const val RANGE_OPERATOR = "range_operator"
+        const val TIMER_OPERATOR = "timer_operator"
+        const val REPEAT_OPERATOR = "repeat_operator"
+        const val DELAY_OPERATOR = "delay_operator"
+        const val REPEAT_WHEN_OPERATOR = "repeat_when_operator"
+        const val FLAT_MAP_OPERATOR = "flat_map_operator"
+        const val ZIP_OPERATOR = "zip_operator"
+        const val AMB_OPERATOR = "amb_operator"
     }
 
     private lateinit var disposable: Disposable
+    private lateinit var compositeDisposable: CompositeDisposable
 
-    private val numbers = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     private val alphabets = listOf("a", "b", "c", "d", "e", "f")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,7 +95,7 @@ class MainActivity : AppCompatActivity() {
 
         buttonMakeRequest.setOnClickListener {
             textResponse.text = ""
-            Subjects.unicastSubject()
+            repeatWhenOperator()
         }
 
         buttonStartActivity.setOnClickListener(object: View.OnClickListener {
@@ -87,6 +107,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        compositeDisposable.clear()
         /* A memory leak like this can be caused by observables which retain a copy of the Android context.
         The problem commonly occurs when subscriptions are created that obtain a context somehow. */
         if (!disposable.isDisposed) {
@@ -95,6 +116,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     //region OPERATORS
+    /**
+     * This operator creates an Observable from scratch by calling observer methods programmatically.
+     */
     private fun createOperator() {
         val observable = Observable.create(object : ObservableOnSubscribe<String> {
             override fun subscribe(emitter: ObservableEmitter<String>) {
@@ -112,82 +136,29 @@ class MainActivity : AppCompatActivity() {
         observable
             .subscribe(object : Observer<String> {
                 override fun onSubscribe(d: Disposable) {
-                    Log.i("creates operator", "onSubscribe")
+                    Log.i(CREATE_OPERATOR, "onSubscribe")
                 }
                 override fun onNext(s: String) {
-                    Log.i("creates operator", s)
+                    Log.i(CREATE_OPERATOR, s)
                 }
                 override fun onError(e: Throwable) {
-                    Log.i("creates operator", e.message)
+                    Log.i(CREATE_OPERATOR, e.message)
                 }
                 override fun onComplete() {
-                    Log.i("creates operator", "onComplete")
+                    Log.i(CREATE_OPERATOR, "onComplete")
                 }
             })
     }
 
-    private fun intervalOperator() {
-        /*
-        Observable.interval() and Observable.timer()
-        timer() emits just a single item after a delay whereas
-        interval() operator, on the other hand, will emit items spaced out with a given interval.
-         */
-        Observable.interval(1, TimeUnit.SECONDS)
-            .take(10)
-            .subscribe(object: Observer<Long>{
-                override fun onComplete() {
-                    Log.i("interval operator", "onComplete")
-                }
 
-                override fun onSubscribe(d: Disposable) {
-                    Log.i("interval operator", "onSubscribe")
-                }
+    private fun flipOperator() { }
 
-                override fun onNext(t: Long) {
-                    Log.i("interval operator", t.toString())
-                }
-
-                override fun onError(e: Throwable) {
-                    Log.i("interval operator", e.message)
-                }
-            })
-    }
-
-    private fun rangeOperator() {
-        /*
-        This operator creates an Observable that emits a range of sequential integers.
-        The function takes two arguments: the starting number and length.
-         */
-        Observable.range(2,10)
-            .subscribe(object: Observer<Int>{
-                override fun onComplete() {
-                    Log.i("range operator", "onComplete")
-                }
-
-                override fun onSubscribe(d: Disposable) {
-                    Log.i("range operator", "onSubscribe")
-                }
-
-                override fun onNext(t: Int) {
-                    Log.i("range operator", t.toString())
-                }
-
-                override fun onError(e: Throwable) {
-                    Log.i("range operator", e.message)
-                }
-            })
-    }
-
+    /**
+     * This operator does not create the Observable until the Observer subscribes.
+     * The only downside to defer() is that it creates a new Observable each time you
+     * get a new Observer.
+     */
     private fun deferOperator() {
-        /*
-        A subscriber is something that subscribes to whatever the observable is returning.
-        It's like saying hey observable let me know when you get something via the onNext(), when you
-        error and when you're done via onCompleted()
-
-        RxJava observables will either error out via onError or they will complete via onCompleted.
-        They both cannot be called, only one will be called. If an error occurs, onError gets called, if
-        an observable completes without error, onCompleted will get called.
-         */
         disposable = getObservablePeople("1")
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -196,6 +167,285 @@ class MainActivity : AppCompatActivity() {
                 { showError(it) },
                 { showMessage("onCompleted") },
                 { showMessage("onSubscribe")})
+    }
+
+    /**
+     * This operator creates an Observable that emits a sequence of integers spaced by a
+     * particular time interval.
+     *
+     * Observable.interval() and Observable.timer()
+     * timer() emits just a single item after a delay whereas
+     * interval() operator, on the other hand, will emit items spaced out with a given interval.
+     */
+    private fun intervalOperator() {
+        Observable.interval(1, TimeUnit.SECONDS)
+            .take(10)
+            .subscribe(object: Observer<Long>{
+                override fun onComplete() {
+                    Log.d(INTERVAL_OPERATOR, "onComplete")
+                }
+
+                override fun onSubscribe(d: Disposable) {
+                    Log.d(INTERVAL_OPERATOR, "onSubscribe")
+                }
+
+                override fun onNext(t: Long) {
+                    Log.d(INTERVAL_OPERATOR, t.toString())
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.d(INTERVAL_OPERATOR, e.message)
+                }
+            })
+    }
+
+    /**
+     * This operator creates an Observable from set of items using an Iterable, which means
+     * we can pass a list or an array of items to the Observable and each item is emitted
+     * one at a time. Some of the examples of the operators include fromCallable(),
+     * fromFuture(), fromIterable(), fromPublisher(), fromArray().
+     */
+    private fun fromOperator() {
+        Observable.fromArray(arrayOf("A", "B", "C", "D", "E", "F"))
+            .subscribe(object : Observer<Array<String>>{
+                override fun onComplete() {
+                    Log.i(FROM_OPERATOR, "onComplete")
+                }
+
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(FROM_OPERATOR, "onSubscribe")
+                }
+
+                override fun onNext(t: Array<String>) {
+                    Log.i(FROM_OPERATOR, t.toString())
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.i(FROM_OPERATOR, e.message)
+                }
+            })
+    }
+
+    /**
+     * This operator takes a list of arguments (maximum 10) and converts the items into
+     * Observable items. just() makes only 1 emission. For instance, If an array is passed as
+     * a parameter to the just() method, the array is emitted as single item instead of
+     * individual numbers. Note that if you pass null to just(), it will return an Observable
+     * that emits null as an item.
+     */
+    private fun justOperator() {
+        /*disposable = Observable.just(1,2,3)
+            .map { (it * 2).toString() }
+            .subscribe {item ->
+                // onNext
+                textResponse.text = "${textResponse.text}\n$item"
+                Log.d("JustOperator", item)
+            }*/
+
+        Observable.just(1,2,3,4)
+            .map { (it * 2).toString() }
+            .subscribe(object: Observer<String> {
+                override fun onComplete() {
+                    Log.d(JUST_OPERATOR, "onComplete")
+                }
+
+                override fun onSubscribe(d: Disposable) {
+                    Log.d(JUST_OPERATOR, "onSubscribe")
+                }
+
+                override fun onNext(t: String) {
+                    Log.d(JUST_OPERATOR, "${textResponse.text}\n$t")
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.d(JUST_OPERATOR, e.message)
+                }
+            })
+    }
+
+    /**
+     * This operator creates an Observable that emits a range of sequential integers.
+     * The function takes two arguments: the starting number and length.
+     */
+    private fun rangeOperator() {
+        Observable.range(2,10)
+            .subscribe(object: Observer<Int>{
+                override fun onComplete() {
+                    Log.i(RANGE_OPERATOR, "onComplete")
+                }
+
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(RANGE_OPERATOR, "onSubscribe")
+                }
+
+                override fun onNext(t: Int) {
+                    Log.i(RANGE_OPERATOR, t.toString())
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.i(RANGE_OPERATOR, e.message)
+                }
+            })
+    }
+
+    /**
+     * This operator creates an Observable that emits one particular item after a span of
+     * time that you specify.
+     *
+     *
+     * Difference between Observable.interval() and Observable.timer()
+     * — timer() emits just a single item after a delay
+     * - interval() operator, on the other hand, will emit items spaced out with a given interval.
+     */
+    private fun timerOperator() {
+        Observable.timer(3, TimeUnit.SECONDS)
+            .subscribe(object : Observer<Long> {
+                override fun onComplete() {
+                    Log.i(TIMER_OPERATOR, "onComplete")
+                }
+
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(TIMER_OPERATOR, "onSubscribe")
+                }
+
+                override fun onNext(t: Long) {
+                    Log.i(TIMER_OPERATOR, t.toString())
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.i(TIMER_OPERATOR, e.message)
+                }
+            })
+    }
+
+    /**
+     * This operator creates an Observable that emits a particular item or sequence of items
+     * repeatedly. There is an option to pass the number of repetitions that can take place as well.
+     */
+    private fun repeatOperator() {
+        Observable.just(1,2, 3)
+            .repeat(3)
+            .subscribe(object : Observer<Int> {
+                override fun onComplete() {
+                    Log.i(REPEAT_OPERATOR, "onComplete")
+                }
+
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(REPEAT_OPERATOR, "onSubscribe")
+                }
+
+                override fun onNext(t: Int) {
+                    Log.i(REPEAT_OPERATOR, t.toString())
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.i(REPEAT_OPERATOR, e.message)
+                }
+            })
+    }
+
+    private fun delayOperator() {
+        Observable.just("a", "b", "c")
+            .delay(2, TimeUnit.SECONDS)
+            .subscribe(object : Observer<String>{
+                override fun onComplete() {
+                    Log.d(DELAY_OPERATOR, "onComplete")
+                }
+
+                override fun onSubscribe(d: Disposable) {
+                    Log.d(DELAY_OPERATOR, "onSubscribe")
+                }
+
+                override fun onNext(t: String) {
+                    Log.d(DELAY_OPERATOR, t)
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.d(DELAY_OPERATOR, e.message)
+                }
+            })
+    }
+
+    private fun repeatWhenOperator() {
+
+        // Observable.just("1")
+        val retrofit = Retrofit.Builder()
+            .baseUrl(HOST)
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        val service = retrofit.create(SwapiService::class.java)
+
+        service.getObservablePeople("1")
+            .repeatWhen {completed -> completed.delay(2, TimeUnit.SECONDS)}
+            .doOnComplete { Log.i("repeatWhenOperator", "doOnComplete") }
+            .doOnNext { Log.i("repeatWhenOperator", "doOnNext") }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(object : Observer<People>{
+                override fun onSubscribe(d: Disposable) {
+                    Log.d(REPEAT_WHEN_OPERATOR, "onSubscribe")
+                }
+
+                override fun onNext(t: People) {
+                    Log.d(REPEAT_WHEN_OPERATOR, t.toString())
+                }
+
+                override fun onError(e: Throwable) {
+                    Log.d(REPEAT_WHEN_OPERATOR, e.message)
+                }
+
+                override fun onComplete() {
+                    Log.d(REPEAT_WHEN_OPERATOR, "onComplete")
+                }
+            })
+
+             /*.subscribe(object : FlowableSubscriber<People>{
+                 override fun onComplete() {
+                     Log.d(REPEAT_WHEN_OPERATOR, "onComplete")
+                 }
+
+                 override fun onSubscribe(s: Subscription) {
+                     Log.d(REPEAT_WHEN_OPERATOR, "onSubscribe")
+                 }
+
+                 override fun onNext(t: People?) {
+                     Log.d(REPEAT_WHEN_OPERATOR, t.toString())
+                 }
+
+                 override fun onError(t: Throwable?) {
+                     Log.d(REPEAT_WHEN_OPERATOR, t?.message)
+                 }
+             })*/
+    }
+
+    /**
+     * The flatMap operator help you to transform one event to another Observable
+     * (or transform an event to zero, one, or more events). It's a perfect operator when
+     * you want to call another method which return an Observable.
+     */
+    private fun flatMapOperator() {
+        val retrofit = Retrofit.Builder()
+            .baseUrl(HOST)
+            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        val service = retrofit.create(SwapiService::class.java)
+
+        var names = ""
+        disposable = service.getObservablePeople("1")
+            .map {
+                    firstResponse -> names = "first response: " + firstResponse.name
+                Log.i("Continuations", "First response")
+            }
+            .flatMap {service.getObservablePeople("2") }
+            .map {
+                    result -> names = names + " second response: " + result.name
+                Log.i("Continuations", "Second response")
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { showResult(names) }
     }
 
     private fun fromCallableOperator() {
@@ -215,23 +465,28 @@ class MainActivity : AppCompatActivity() {
         If any of the operators are blocking, the other operators will get blocked and will not executed
         and that blocking operation will complete, emitting that item. This defeats the purpose of AMB.
 
-        So that means that all of your parameters to amb, whick are observables, need to be asynchronous
+        So that means that all of your parameters to amb, which are observables, need to be asynchronous
         for amb to work correctly.
          */
         disposable = Observable.ambArray(getObservablePeople("1"), getObservablePeople("2"))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe({ showResult(it) }, { showError(it) })
+            .subscribe(
+                { showResult(it) },
+                { showError(it) },
+                { Log.d(AMB_OPERATOR, "onComplete") },
+                { Log.d(AMB_OPERATOR, "onSubscribe") })
     }
 
+    /**
+     * You'll need to perform two ways synchronous operations at the same time and only when both of
+     * them are complete, can you move forward with the execution of the program.
+     *
+     * This operator allows you to combine a set of items that have been emitted by two or more
+     * observables via a special function. When that happens the zip operator will emit the
+     * items based upon this function.
+     */
     private fun zipOperator() {
-        /*
-        You'll need to perform two ways synchronous operations at the same time and only when both of
-        them are complete, can you move forward with the execution of the program.
-
-        This operator allows you to combine a set of items that have been emitted by two or more observables via a
-        special function. When that happens the zip operator will emit the items based upon this function.
-         */
         disposable = Observable.zip(
             getObservablePeople("1"),
             getObservablePeople("2"),
@@ -245,45 +500,8 @@ class MainActivity : AppCompatActivity() {
             .subscribe(
             { showResult(it) },
             { showError(it) },
-            { Log.d("ZipOperator", "onComplete") },
-            { Log.d("ZipOperator", "onSubscribe") })
-    }
-
-    private fun justOperator() {
-        /*
-         This operator takes a list of arguments (maximum 10) and converts the items into Observable items. just()
-         makes only 1 emission. For instance, If an array is passed as a parameter to the just() method, the
-         array is emitted as single item instead of individual numbers. Note that if you pass null to just(),
-         it will return an Observable that emits null as an item.
-         */
-
-        disposable = Observable.just(1,2,3)
-            .map { (it * 2).toString() }
-            .subscribe {item ->
-                // onNext
-                textResponse.text = "${textResponse.text}\n$item"
-                Log.d("JustOperator", item)
-            }
-
-        Observable.just(1,2,3)
-            .map { (it * 2).toString() }
-            .subscribe(object: Observer<String> {
-                override fun onComplete() {
-                    Log.d("JustOperator", "onSubscribe")
-                }
-
-                override fun onSubscribe(d: Disposable) {
-                    Log.d("JustOperator", "onSubscribe")
-                }
-
-                override fun onNext(t: String) {
-                    textResponse.text = "${textResponse.text}\n$t"
-                }
-
-                override fun onError(e: Throwable) {
-                    showError(e)
-                }
-            })
+            { Log.d(ZIP_OPERATOR, "onComplete") },
+            { Log.d(ZIP_OPERATOR, "onSubscribe") })
     }
 
     private fun getObservablePeople(person: String): Observable<People> {
@@ -329,23 +547,6 @@ class MainActivity : AppCompatActivity() {
             // how the onError of a subscriber gets called via the Observable.error() method
             Observable.error(e)
         }
-    }
-
-    private fun makeRequestSequentially() {
-        val retrofit = Retrofit.Builder()
-            .baseUrl(HOST)
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        val service = retrofit.create(SwapiService::class.java)
-
-        disposable = service.getObservablePeople("1")
-            .map { firstResponse -> "first response:" + firstResponse.name }
-            .flatMap { service.getObservablePeople("2") }
-            .map { result -> "second response: " + result.name }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { showResult(it) }
     }
 
     //region REQUEST

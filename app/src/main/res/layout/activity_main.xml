@@ -19,12 +19,15 @@
 
     <TextView
         android:id="@+id/textResponse"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
         android:layout_marginTop="16dp"
+        android:maxLines="3"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="@+id/buttonMakeRequest"
         app:layout_constraintTop_toBottomOf="@+id/buttonMakeRequest"
+        app:layout_constraintEnd_toEndOf="parent"
         tools:text="response"/>
 
     <TextView

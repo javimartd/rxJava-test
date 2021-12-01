@@ -8,14 +8,24 @@
     tools:context=".MainActivity">
 
     <Button
-        android:id="@+id/buttonMakeRequest"
+        android:id="@+id/buttonOperator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginStart="16dp"
-        android:text="Make request"
+        android:text="Operator"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
+
+    <Button
+        android:id="@+id/buttonEmit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Emit"
+        android:layout_marginStart="16dp"
+        app:layout_constraintStart_toEndOf="@+id/buttonOperator"
+        app:layout_constraintBottom_toBottomOf="@+id/buttonOperator"
+        app:layout_constraintTop_toTopOf="@+id/buttonOperator" />
 
     <TextView
         android:id="@+id/textResponse"
@@ -25,8 +35,8 @@
         android:layout_marginTop="16dp"
         android:maxLines="3"
         android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="@+id/buttonMakeRequest"
-        app:layout_constraintTop_toBottomOf="@+id/buttonMakeRequest"
+        app:layout_constraintStart_toStartOf="@+id/buttonOperator"
+        app:layout_constraintTop_toBottomOf="@+id/buttonOperator"
         app:layout_constraintEnd_toEndOf="parent"
         tools:text="response"/>
 

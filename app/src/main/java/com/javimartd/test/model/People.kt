@@ -4,7 +4,8 @@ import com.google.gson.annotations.SerializedName
 
 data class People(
         @SerializedName("name")
-        var name: String = "",
+        var name: String = "default_name",
 
         @SerializedName("gender")
-        val gender: String = "")
+        val gender: String = "default_gender"
+)

@@ -1,4 +1,4 @@
-package com.javimartd
+package com.javimartd.test
 
 import android.util.Log
 import com.javimartd.test.model.People
@@ -14,11 +14,18 @@ object Observables {
     private const val FLOWABLE_OBSERVABLE = "Flowable"
 
     /**
+     * - Observable can emit multiple items
+     * - Single, Maybe and Completable are one or no emission of items.
+     */
+
+    /**
      * Single is an Observable that always emit only one value or throws an error.
-     * A typical use case of Single observable would be when we make a network call in Android and receive a response.
+     * Method onNext() and onComplete() of Observable has been combined to onSuccess()
+     *
+     * Example: A typical use case of Single observable would be when we make a network call
+     * in Android and receive a response.
      *
      * We use a Single Observable and a Single Observer.
-     * The Single Observer always emits only once so there is no onNext() .
      */
     fun singleObservable() {
         val observable = Single.create(object: SingleOnSubscribe<People> {
@@ -37,14 +44,17 @@ object Observables {
                     Log.i(SINGLE_OBSERVABLE, t.toString())
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(SINGLE_OBSERVABLE, e.message)
+                    Log.i(SINGLE_OBSERVABLE, e.toString())
                 }
             })
     }
 
     /**
-     * Maybe is an Observable that may or may not emit a value.
-     * For example, we would like to know if a particular user exists in our db. The user may or may not exist.
+     * Maybe is an Observable that may or may not emit a value. Is similar to Single only
+     * difference being that it allows for no emissions as well.
+     *
+     * Example: we would like to know if a particular user exists in our db.
+     * The user may or may not exist.
      *
      * We use a Maybe Observable and a Maybe Observer.
      */
@@ -70,17 +80,19 @@ object Observables {
                 }
 
                 override fun onError(e: Throwable) {
-                    Log.i(MAYBE_OBSERVABLE, e.message)
+                    Log.i(MAYBE_OBSERVABLE, e.toString())
                 }
             })
     }
 
     /**
-     * Completable does not emit any data, but rather is focused on the status of execution — whether successful or failure.
+     * Completable doesn't emit any data, but rather is focused on the status of execution,
+     * whether successful or failure.
      *
      * Since no data is emitted in Completable, there is no onNext() or onSuccess().
      *
-     * This scenario can be used in cases where PUT API is called and we need to update an existing object to the backend.
+     * Example: this scenario can be used in cases where PUT API is called and we need to
+     * update an existing object to the backend.
      */
     fun completableObservable() {
         val observable = Completable.create(object : CompletableOnSubscribe {
@@ -101,14 +113,14 @@ object Observables {
                 }
 
                 override fun onError(e: Throwable) {
-                    Log.i(COMPLETABLE_OBSERVABLE, e.message)
+                    Log.i(COMPLETABLE_OBSERVABLE, e.toString())
                 }
             })
     }
 
     /**
-     * Flowable is typically used when an Observable is emitting huge amounts of data but the Observer
-     * is not able to handle this data emission. This is known as Back Pressure.
+     * Flowable is typically used when an Observable is emitting huge amounts of data but the
+     * Observer is not able to handle this data emission. This is known as Back Pressure.
      */
     fun flowableObservable() {
         /*
@@ -145,7 +157,7 @@ object Observables {
                 }
 
                 override fun onError(e: Throwable) {
-                    Log.i(FLOWABLE_OBSERVABLE, e.message)
+                    Log.i(FLOWABLE_OBSERVABLE, e.toString())
                 }
             })
 
@@ -169,7 +181,7 @@ object Observables {
                 }
 
                 override fun onError(e: Throwable) {
-                    Log.i(FLOWABLE_OBSERVABLE, e.message)
+                    Log.i(FLOWABLE_OBSERVABLE, e.toString())
                 }
             })
     }

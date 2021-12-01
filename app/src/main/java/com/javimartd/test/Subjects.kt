@@ -1,4 +1,4 @@
-package com.javimartd
+package com.javimartd.test
 
 import android.annotation.SuppressLint
 import android.util.Log
@@ -58,7 +58,7 @@ object Subjects {
 
         publishSubject.subscribe(
             { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(PUBLISH_SUBJECT, it.message) },
+            { Log.i(PUBLISH_SUBJECT, it.toString()) },
             { Log.i(PUBLISH_SUBJECT, "onComplete") },
             { Log.i(PUBLISH_SUBJECT, "onSubscribe") }
         )
@@ -68,7 +68,7 @@ object Subjects {
 
         publishSubject.subscribe(
             { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(PUBLISH_SUBJECT + "2", it.message) },
+            { Log.i(PUBLISH_SUBJECT + "2", it.toString()) },
             { Log.i(PUBLISH_SUBJECT + "2", "onComplete") },
             { Log.i(PUBLISH_SUBJECT + "2", "onSubscribe") }
         )
@@ -96,7 +96,7 @@ object Subjects {
         behaviorSubject.onNext(0)
         behaviorSubject.subscribe(
             { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(BEHAVIOR_SUBJECT, it.message) },
+            { Log.i(BEHAVIOR_SUBJECT, it.toString()) },
             { Log.i(BEHAVIOR_SUBJECT, "onComplete") },
             { Log.i(BEHAVIOR_SUBJECT, "onSubscribe") }
         )
@@ -104,7 +104,7 @@ object Subjects {
         behaviorSubject.onNext(2)
         behaviorSubject.subscribe(
             { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(BEHAVIOR_SUBJECT + "2", it.message) },
+            { Log.i(BEHAVIOR_SUBJECT + "2", it.toString()) },
             { Log.i(BEHAVIOR_SUBJECT + "2", "onComplete") },
             { Log.i(BEHAVIOR_SUBJECT + "2", "onSubscribe") }
         )
@@ -121,7 +121,7 @@ object Subjects {
         replaySubject.onNext(0)
         replaySubject.subscribe(
             { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(REPLAY_SUBJECT, it.message) },
+            { Log.i(REPLAY_SUBJECT, it.toString()) },
             { Log.i(REPLAY_SUBJECT, "onComplete") },
             { Log.i(REPLAY_SUBJECT, "onSubscribe") }
         )
@@ -129,7 +129,7 @@ object Subjects {
         replaySubject.onNext(2)
         replaySubject.subscribe(
             { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(REPLAY_SUBJECT + "2", it.message) },
+            { Log.i(REPLAY_SUBJECT + "2", it.toString()) },
             { Log.i(REPLAY_SUBJECT + "2", "onComplete") },
             { Log.i(REPLAY_SUBJECT + "2", "onSubscribe") }
         )
@@ -146,7 +146,7 @@ object Subjects {
         asyncSubject.onNext(0)
         asyncSubject.subscribe(
             { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(ASYNC_SUBJECT, it.message) },
+            { Log.i(ASYNC_SUBJECT, it.toString()) },
             { Log.i(ASYNC_SUBJECT, "onComplete") },
             { Log.i(ASYNC_SUBJECT, "onSubscribe") }
         )
@@ -154,7 +154,7 @@ object Subjects {
         asyncSubject.onNext(2)
         asyncSubject.subscribe(
             { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(ASYNC_SUBJECT + "2", it.message) },
+            { Log.i(ASYNC_SUBJECT + "2", it.toString()) },
             { Log.i(ASYNC_SUBJECT + "2", "onComplete") },
             { Log.i(ASYNC_SUBJECT + "2", "onSubscribe") }
         )
@@ -177,7 +177,7 @@ object Subjects {
         unicastSubject.onNext(0)
         unicastSubject.subscribe(
             { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(UNICAST_SUBJECT, it.message) },
+            { Log.i(UNICAST_SUBJECT, it.toString()) },
             { Log.i(UNICAST_SUBJECT, "onComplete") },
             { Log.i(UNICAST_SUBJECT, "onSubscribe") }
         )
@@ -185,7 +185,7 @@ object Subjects {
         unicastSubject.onNext(2)
         unicastSubject.subscribe(
             { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(UNICAST_SUBJECT + "2", it.message) },
+            { Log.i(UNICAST_SUBJECT + "2", it.toString()) },
             { Log.i(UNICAST_SUBJECT + "2", "onComplete") },
             { Log.i(UNICAST_SUBJECT + "2", "onSubscribe") }
         )

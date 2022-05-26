@@ -1,10 +1,10 @@
-package com.javimartd.test
+package com.javimartd.test.rx
 
 import android.annotation.SuppressLint
 import android.util.Log
-import io.reactivex.Observable
-import io.reactivex.schedulers.Schedulers
-import io.reactivex.subjects.*
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.schedulers.Schedulers
+import io.reactivex.rxjava3.subjects.*
 
 object Subjects {
 
@@ -56,22 +56,22 @@ object Subjects {
 
         publishSubject.onNext(0)
 
-        publishSubject.subscribe(
+        /*publishSubject.subscribe(
             { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
             { Log.i(PUBLISH_SUBJECT, it.toString()) },
             { Log.i(PUBLISH_SUBJECT, "onComplete") },
             { Log.i(PUBLISH_SUBJECT, "onSubscribe") }
-        )
+        )*/
 
         publishSubject.onNext(1)
         publishSubject.onNext(2)
 
-        publishSubject.subscribe(
+        /*publishSubject.subscribe(
             { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
             { Log.i(PUBLISH_SUBJECT + "2", it.toString()) },
             { Log.i(PUBLISH_SUBJECT + "2", "onComplete") },
             { Log.i(PUBLISH_SUBJECT + "2", "onSubscribe") }
-        )
+        )*/
 
         publishSubject.onNext(3)
         publishSubject.onNext(4)
@@ -94,20 +94,20 @@ object Subjects {
          */
         val behaviorSubject = BehaviorSubject.create<Int>()
         behaviorSubject.onNext(0)
-        behaviorSubject.subscribe(
+        /*behaviorSubject.subscribe(
             { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
             { Log.i(BEHAVIOR_SUBJECT, it.toString()) },
             { Log.i(BEHAVIOR_SUBJECT, "onComplete") },
             { Log.i(BEHAVIOR_SUBJECT, "onSubscribe") }
-        )
+        )*/
         behaviorSubject.onNext(1)
         behaviorSubject.onNext(2)
-        behaviorSubject.subscribe(
+        /*behaviorSubject.subscribe(
             { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
             { Log.i(BEHAVIOR_SUBJECT + "2", it.toString()) },
             { Log.i(BEHAVIOR_SUBJECT + "2", "onComplete") },
             { Log.i(BEHAVIOR_SUBJECT + "2", "onSubscribe") }
-        )
+        )*/
         behaviorSubject.onNext(3)
         behaviorSubject.onNext(4)
     }
@@ -119,20 +119,20 @@ object Subjects {
     fun replaySubject() {
         val replaySubject = ReplaySubject.create<Int>()
         replaySubject.onNext(0)
-        replaySubject.subscribe(
+        /*replaySubject.subscribe(
             { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
             { Log.i(REPLAY_SUBJECT, it.toString()) },
             { Log.i(REPLAY_SUBJECT, "onComplete") },
             { Log.i(REPLAY_SUBJECT, "onSubscribe") }
-        )
+        )*/
         replaySubject.onNext(1)
         replaySubject.onNext(2)
-        replaySubject.subscribe(
+        /*replaySubject.subscribe(
             { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
             { Log.i(REPLAY_SUBJECT + "2", it.toString()) },
             { Log.i(REPLAY_SUBJECT + "2", "onComplete") },
             { Log.i(REPLAY_SUBJECT + "2", "onSubscribe") }
-        )
+        )*/
         replaySubject.onNext(3)
         replaySubject.onNext(4)
     }
@@ -144,20 +144,20 @@ object Subjects {
     fun asyncSubject() {
         val asyncSubject = AsyncSubject.create<Int>()
         asyncSubject.onNext(0)
-        asyncSubject.subscribe(
+        /*asyncSubject.subscribe(
             { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
             { Log.i(ASYNC_SUBJECT, it.toString()) },
             { Log.i(ASYNC_SUBJECT, "onComplete") },
             { Log.i(ASYNC_SUBJECT, "onSubscribe") }
-        )
+        )*/
         asyncSubject.onNext(1)
         asyncSubject.onNext(2)
-        asyncSubject.subscribe(
+        /*asyncSubject.subscribe(
             { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
             { Log.i(ASYNC_SUBJECT + "2", it.toString()) },
             { Log.i(ASYNC_SUBJECT + "2", "onComplete") },
             { Log.i(ASYNC_SUBJECT + "2", "onSubscribe") }
-        )
+        )*/
         asyncSubject.onNext(3)
         asyncSubject.onNext(4)
 
@@ -175,20 +175,20 @@ object Subjects {
     fun unicastSubject() {
         val unicastSubject = UnicastSubject.create<Int>()
         unicastSubject.onNext(0)
-        unicastSubject.subscribe(
+        /*unicastSubject.subscribe(
             { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
             { Log.i(UNICAST_SUBJECT, it.toString()) },
             { Log.i(UNICAST_SUBJECT, "onComplete") },
             { Log.i(UNICAST_SUBJECT, "onSubscribe") }
-        )
+        )*/
         unicastSubject.onNext(1)
         unicastSubject.onNext(2)
-        unicastSubject.subscribe(
+        /*unicastSubject.subscribe(
             { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
             { Log.i(UNICAST_SUBJECT + "2", it.toString()) },
             { Log.i(UNICAST_SUBJECT + "2", "onComplete") },
             { Log.i(UNICAST_SUBJECT + "2", "onSubscribe") }
-        )
+        )*/
         unicastSubject.onNext(3)
         unicastSubject.onNext(4)
     }

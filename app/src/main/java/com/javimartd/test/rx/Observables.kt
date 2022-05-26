@@ -1,10 +1,10 @@
-package com.javimartd.test
+package com.javimartd.test.rx
 
 import android.util.Log
-import com.javimartd.test.model.People
-import io.reactivex.*
-import io.reactivex.disposables.Disposable
-import io.reactivex.functions.BiFunction
+import com.javimartd.test.api.People
+import io.reactivex.rxjava3.core.*
+import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.functions.BiFunction
 
 object Observables {
 
@@ -30,8 +30,8 @@ object Observables {
     fun singleObservable() {
         val observable = Single.create(object: SingleOnSubscribe<People> {
             override fun subscribe(emitter: SingleEmitter<People>) {
-                val people = People("Sofia", "Female")
-                emitter.onSuccess(people)
+                val person = People("Sofia", "Female")
+                emitter.onSuccess(person)
             }
         })
 
@@ -61,8 +61,8 @@ object Observables {
     fun maybeObservable() {
         val observable = Maybe.create(object: MaybeOnSubscribe<People> {
             override fun subscribe(emitter: MaybeEmitter<People>) {
-                val people = People("Sofia", "Female")
-                emitter.onSuccess(people)
+                val person = People("Sofia", "Female")
+                emitter.onSuccess(person)
             }
         })
         observable.
@@ -70,15 +70,12 @@ object Observables {
                 override fun onSubscribe(d: Disposable) {
                     Log.i(MAYBE_OBSERVABLE, "onSubscribe")
                 }
-
                 override fun onSuccess(t: People) {
                     Log.i(MAYBE_OBSERVABLE, t.toString())
                 }
-
                 override fun onComplete() {
                     Log.i(MAYBE_OBSERVABLE, "onComplete")
                 }
-
                 override fun onError(e: Throwable) {
                     Log.i(MAYBE_OBSERVABLE, e.toString())
                 }
@@ -107,11 +104,9 @@ object Observables {
                 override fun onSubscribe(d: Disposable) {
                     Log.i(COMPLETABLE_OBSERVABLE, "onSubscribe")
                 }
-
                 override fun onComplete() {
                     Log.i(COMPLETABLE_OBSERVABLE, "onComplete")
                 }
-
                 override fun onError(e: Throwable) {
                     Log.i(COMPLETABLE_OBSERVABLE, e.toString())
                 }
@@ -147,15 +142,12 @@ object Observables {
                 override fun onSubscribe(d: Disposable) {
                     Log.i(FLOWABLE_OBSERVABLE, "onSubscribe")
                 }
-
                 override fun onSuccess(t: Int) {
                     Log.i(FLOWABLE_OBSERVABLE, t.toString())
                 }
-
                 override fun onComplete() {
                     Log.i(FLOWABLE_OBSERVABLE, "onComplete")
                 }
-
                 override fun onError(e: Throwable) {
                     Log.i(FLOWABLE_OBSERVABLE, e.toString())
                 }
@@ -175,11 +167,9 @@ object Observables {
                 override fun onSubscribe(d: Disposable) {
                     Log.i(FLOWABLE_OBSERVABLE, "onSubscribe")
                 }
-
                 override fun onSuccess(t: Int) {
                     Log.i(FLOWABLE_OBSERVABLE, t.toString())
                 }
-
                 override fun onError(e: Throwable) {
                     Log.i(FLOWABLE_OBSERVABLE, e.toString())
                 }

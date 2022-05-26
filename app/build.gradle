@@ -2,7 +2,6 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-kapt'
-    id 'kotlin-android-extensions'
 }
 
 android {
@@ -26,6 +25,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    viewBinding {
+        enabled = true
+    }
 }
 
 dependencies {
@@ -39,14 +42,14 @@ dependencies {
     // retrofit OkHttp
     implementation "com.squareup.retrofit2:retrofit:2.9.0"
     implementation "com.squareup.retrofit2:converter-gson:2.9.0"
-    implementation "com.squareup.retrofit2:adapter-rxjava2:2.9.0"
+    implementation 'com.squareup.retrofit2:adapter-rxjava3:2.9.0'
 
     // okhttp
-    implementation "com.squareup.okhttp3:okhttp:3.14.9"
-    implementation "com.squareup.okhttp3:logging-interceptor:3.14.9"
+    implementation "com.squareup.okhttp3:okhttp:4.9.2"
+    implementation "com.squareup.okhttp3:logging-interceptor:4.9.2"
 
     // Gson
-    implementation "com.google.code.gson:gson:2.8.6"
+    implementation "com.google.code.gson:gson:2.8.9"
 
     // leak canary
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.6.3'

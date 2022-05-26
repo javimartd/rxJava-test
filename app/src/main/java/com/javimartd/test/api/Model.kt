@@ -21,4 +21,10 @@ data class Planet(
     var terrain: String = "default_terrain"
 )
 
-data class CombinePeople(val compoundName: String)
+data class Starship(
+    @SerializedName("name")
+    var name: String = "default_name",
+
+    @SerializedName("model")
+    val model: String = "default_model"
+)

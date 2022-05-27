@@ -28,11 +28,12 @@ const val JOIN_OPERATOR = "join_operator"
 
 // filtering observables
 const val FILTER_OPERATOR = "FILTER_OPERATOR"
+const val SKIP_OPERATOR = "SKIP_OPERATOR"
 const val DEBOUNCE_OPERATOR = "debounce_operator"
 const val DISTINCT_OPERATOR = "distint_operator"
 const val SAMPLE_OPERATOR = "sample_operator"
 const val FIRST_OPERATOR = "first_operator"
-const val SKIP_OPERATOR = "skip_operator"
+
 const val TAKE_OPERATOR = "take_operator"
 const val TAKE_LAST_OPERATOR = "take_last_operator"
 

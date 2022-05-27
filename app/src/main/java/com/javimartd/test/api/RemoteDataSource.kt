@@ -1,7 +1,6 @@
 package com.javimartd.test.api
 
 import com.google.gson.Gson
-import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import okhttp3.OkHttpClient
@@ -24,7 +23,7 @@ class RemoteDataSource: DataSource {
         return service.getPeople(number)
     }
 
-    override fun getStarship(number: String): Flowable<Starship> {
+    override fun getStarship(number: String): Single<Starship> {
         return service.getStarship(number)
     }
 

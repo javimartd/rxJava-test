@@ -15,10 +15,7 @@ data class Planet(
     var name: String = "default_name",
 
     @SerializedName("climate")
-    var climate: String = "default_climate",
-
-    @SerializedName("terrain")
-    var terrain: String = "default_terrain"
+    var climate: String = "default_climate"
 )
 
 data class Starship(

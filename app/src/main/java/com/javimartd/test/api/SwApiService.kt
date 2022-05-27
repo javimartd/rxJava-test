@@ -1,6 +1,5 @@
 package com.javimartd.test.api
 
-import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.Single
 import retrofit2.http.GET
@@ -11,7 +10,7 @@ interface SwApiService {
     fun getPeople(@Path("number") number: String): Observable<People>
 
     @GET("starships/{number}")
-    fun getStarship(@Path("person") number: String): Flowable<Starship>
+    fun getStarship(@Path("person") number: String): Single<Starship>
 
     @GET("planets/{number}")
     fun getPlanet(@Path("number") number: String): Single<Planet>

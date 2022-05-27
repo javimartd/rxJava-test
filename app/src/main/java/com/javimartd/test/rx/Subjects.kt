@@ -1,6 +1,5 @@
 package com.javimartd.test.rx
 
-import android.annotation.SuppressLint
 import android.util.Log
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
@@ -16,7 +15,6 @@ object Subjects {
     private const val ASYNC_SUBJECT = "async subject"
     private const val UNICAST_SUBJECT = "unicast subject"
 
-    @SuppressLint("CheckResult")
     fun usoOfSubject() {
         val observable = Observable
             .range(1, 5)
@@ -43,7 +41,6 @@ object Subjects {
      * PublishSubject emits all the items at the point of subscription.
      * This is the most basic form of Subject.
      */
-    @SuppressLint("CheckResult")
     fun publishSubject() {
         val publishSubject = PublishSubject.create<Int>()
 
@@ -85,7 +82,6 @@ object Subjects {
      * after subscription and BehaviorSubject prints the last emitted value before subscription and all
      * the values after subscription.
      */
-    @SuppressLint("CheckResult")
     private fun behaviorSubject() {
         /*
           Difference between PublishSubject and BehaviorSubject is that PublishSubject prints all values after
@@ -115,7 +111,6 @@ object Subjects {
     /**
      * ReplaySubject emits all the items of the Observable, regardless of when the subscriber subscribes.
      */
-    @SuppressLint("CheckResult")
     fun replaySubject() {
         val replaySubject = ReplaySubject.create<Int>()
         replaySubject.onNext(0)
@@ -140,7 +135,6 @@ object Subjects {
     /**
      * AsyncSubject emits only the last value of the Observable and this only happens after the Observable completes.
      */
-    @SuppressLint("CheckResult")
     fun asyncSubject() {
         val asyncSubject = AsyncSubject.create<Int>()
         asyncSubject.onNext(0)
@@ -171,7 +165,6 @@ object Subjects {
     /**
      * UnicastSubject allows only a single subscriber and it emits all the items regardless of the time of subscription.
      */
-    @SuppressLint("CheckResult")
     fun unicastSubject() {
         val unicastSubject = UnicastSubject.create<Int>()
         unicastSubject.onNext(0)

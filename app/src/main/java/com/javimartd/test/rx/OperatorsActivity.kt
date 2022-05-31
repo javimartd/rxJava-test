@@ -2,20 +2,22 @@ package com.javimartd.test.rx
 
 import android.content.Intent
 import android.os.Bundle
+import android.text.format.Time
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.javimartd.test.EmptyActivity
-import com.javimartd.test.api.DataSource
-import com.javimartd.test.api.People
-import com.javimartd.test.api.RemoteDataSource
+import com.javimartd.test.api.*
 import com.javimartd.test.databinding.ActivityOperatorsBinding
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.*
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.functions.BiFunction
 import io.reactivex.rxjava3.functions.Consumer
 import io.reactivex.rxjava3.schedulers.Schedulers
+import org.reactivestreams.Subscription
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 
 class OperatorsActivity : AppCompatActivity() {
 
@@ -33,7 +35,7 @@ class OperatorsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.buttonOperator.setOnClickListener {
-            filterOperator()
+            mergeOperator()
         }
         binding.buttonCancel.setOnClickListener {
             if (!disposable.isDisposed) {
@@ -69,6 +71,10 @@ class OperatorsActivity : AppCompatActivity() {
         if (!disposable.isDisposed) {
             disposable.dispose()
         }
+    }
+
+    private fun setMessage(message: String) {
+        binding.textResponse.text = message
     }
 
     private fun createButtonObservable() {
@@ -120,7 +126,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(CREATE_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(CREATE_OPERATOR, "onError" + e.message)
+                    Log.i(CREATE_OPERATOR, "onError, " + e.message)
                 }
             })
     }
@@ -141,7 +147,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(JUST_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(JUST_OPERATOR, "onError" + e.message)
+                    Log.i(JUST_OPERATOR, "onError, " + e.message)
                 }
             })
     }
@@ -162,7 +168,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(FROM_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(FROM_OPERATOR, "onError" + e.message)
+                    Log.i(FROM_OPERATOR, "onError, " + e.message)
                 }
             })
     }
@@ -197,7 +203,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(TIMER_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(TIMER_OPERATOR, "onError" + e.message)
+                    Log.i(TIMER_OPERATOR, "onError, " + e.message)
                 }
             })
     }
@@ -219,7 +225,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(INTERVAL_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(INTERVAL_OPERATOR, "onError" + e.message)
+                    Log.i(INTERVAL_OPERATOR, "onError, " + e.message)
                 }
             })
     }
@@ -240,7 +246,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(RANGE_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(RANGE_OPERATOR, "onError" + e.message)
+                    Log.i(RANGE_OPERATOR, "onError, " + e.message)
                 }
             })
     }
@@ -262,19 +268,14 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(REPEAT_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(REPEAT_OPERATOR, "onError" + e.message)
+                    Log.i(REPEAT_OPERATOR, "onError, " + e.message)
                 }
             })
     }
 
-    /**
-     *
-     * repeat operator resubscribes when it receives onCompleted()
-     * retry operator resubscribes when it receives onError().
-     */
     private fun repeatWhenOperator() {
-        remoteDataSource.getPeople("4")
-            .repeatWhen { completed -> completed.delay(3, TimeUnit.SECONDS) }
+        remoteDataSource.getPeople("2")
+            .repeatWhen { completed -> completed.delay(2, TimeUnit.SECONDS) }
             .doOnComplete { Log.i(REPEAT_WHEN_OPERATOR, "doOnComplete") }
             .doOnNext { Log.i(REPEAT_WHEN_OPERATOR, "doOnNext") }
             .subscribeOn(Schedulers.io())
@@ -291,16 +292,9 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(REPEAT_WHEN_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(REPEAT_WHEN_OPERATOR, "onError" + e.message)
+                    Log.i(REPEAT_WHEN_OPERATOR, "onError, " + e.message)
                 }
             })
-    }
-
-    /**
-     *
-     */
-    private fun repeatUntilOperator() {
-
     }
 
     /**
@@ -374,25 +368,34 @@ class OperatorsActivity : AppCompatActivity() {
 
     //region COMBINING OBSERVABLES
     /**
-     * This operator takes items from two or more observables and puts them into a single observable.
-     * Example of parallel multiple network calls (asynchronous operations).
+     * https://reactivex.io/documentation/operators/merge.html
      */
     private fun mergeOperator() {
-        disposable = Single.merge(
-            remoteDataSource.getPlanet("1").subscribeOn(Schedulers.io()),
-            remoteDataSource.getPlanet("2").subscribeOn(Schedulers.io()),
-            remoteDataSource.getPlanet("3").subscribeOn(Schedulers.io()))
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                Log.i(MERGE_OPERATOR, it.toString())
-            }
-
-        /*val observable1 = Observable.just("1","2","3")
-        val observable2 = Observable.just("Hi", "Bye", "How are you?")
-        val observable = Observable.merge(observable1, observable2)
-            .subscribe {
-                Log.i(MERGE_OPERATOR, it)
-            }*/
+        val firstObservable = Observable
+            .interval(1000, TimeUnit.MILLISECONDS)
+            .take(5)
+        val secondObservable = Observable
+            .interval(500, TimeUnit.MILLISECONDS)
+            .take(10)
+        Observable.merge(
+            firstObservable,
+            secondObservable
+        )
+            .subscribe(object: Observer<Any> {
+                override fun onSubscribe(d: Disposable) {
+                    disposable = d
+                    Log.d(MERGE_OPERATOR, "onSubscribe")
+                }
+                override fun onNext(t: Any) {
+                    Log.d(MERGE_OPERATOR, "onNext, $t")
+                }
+                override fun onComplete() {
+                    Log.d(MERGE_OPERATOR, "onComplete")
+                }
+                override fun onError(e: Throwable) {
+                    Log.d(MERGE_OPERATOR, "onError, " + e.message)
+                }
+            })
     }
 
     /**
@@ -400,22 +403,26 @@ class OperatorsActivity : AppCompatActivity() {
      * them are complete, can you move forward with the execution of the program.
      */
     private fun zipOperator() {
-        /*disposable = Observable.zip(
-            getObservablePeople("1"),
-            getObservablePeople("2"),
-            object : BiFunction<Person, Person, CombinePeople> {
-                override fun apply(s: Person, s2: Person): CombinePeople {
+
+        val single1 = remoteDataSource.getPlanet("2")
+        val single2 = remoteDataSource.getPlanet("5")
+
+        single1.zipWith(single2, BiFunction { s1: Planet, s2: Planet -> "$s1 $s2" })
+
+        /*Observable.pa(
+            remoteDataSource.getPeople("5"),
+            remoteDataSource.getStarship("2"),
+            object : BiFunction<People, Starship, (r1, r2)> {
+                override fun apply(s: People, s2: Starship): CombinePeople {
                     return CombinePeople(s.name + " " + s2.name)
                 }
-            })
+            }
+        )*/
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
-                { showResult(it) },
-                { showError(it) },
-                { Log.d(ZIP_OPERATOR, "onComplete") },
-                { Log.d(ZIP_OPERATOR, "onSubscribe") }
-            )*/
+
+            )
     }
 
     /**
@@ -476,7 +483,45 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(SKIP_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(SKIP_OPERATOR, "onError" + e.message)
+                    Log.i(SKIP_OPERATOR, "onError, " + e.message)
+                }
+            })
+    }
+
+    /**
+     * https://reactivex.io/documentation/operators/first.html
+     */
+    private fun firstOperator() {
+        Observable.just(1, 2, 3)
+            .first(0)
+            .subscribe(object : SingleObserver<Int> {
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(FIRST_OPERATOR, "onSubscribe")
+                }
+                override fun onSuccess(t: Int) {
+                    Log.i(FIRST_OPERATOR, "onSuccess, $t")
+                }
+                override fun onError(e: Throwable) {
+                    Log.i(FIRST_OPERATOR, "onError, " + e.message)
+                }
+            })
+    }
+
+    /**
+     * https://reactivex.io/documentation/operators/last.html
+     */
+    private fun lastOperator() {
+        Observable.just(1, 2, 3)
+            .last(0)
+            .subscribe(object : SingleObserver<Int> {
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(LAST_OPERATOR, "onSubscribe")
+                }
+                override fun onSuccess(t: Int) {
+                    Log.i(LAST_OPERATOR, "onSuccess, $t")
+                }
+                override fun onError(e: Throwable) {
+                    Log.i(LAST_OPERATOR, "onError, " + e.message)
                 }
             })
     }
@@ -509,6 +554,51 @@ class OperatorsActivity : AppCompatActivity() {
             }
     }
 
+    /**
+     * https://reactivex.io/documentation/operators/take.html
+     */
+    private fun takeOperator() {
+        Observable.just(1, 2, 3, 4,5,6,7, 8)
+            .take(4)
+            .subscribe(object : Observer<Int> {
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(TAKE_OPERATOR, "onSubscribe")
+                }
+                override fun onNext(t: Int) {
+                    Log.i(TAKE_OPERATOR, "onNext $t")
+                }
+                override fun onComplete() {
+                    Log.i(TAKE_OPERATOR, "onComplete")
+                }
+                override fun onError(e: Throwable) {
+                    Log.i(TAKE_OPERATOR, "onError, " + e.message)
+                }
+            })
+    }
+
+    /**
+     * https://reactivex.io/documentation/operators/sample.html
+     */
+    private fun sampleOperator() {
+        Observable.interval(1, TimeUnit.SECONDS)
+            .take(20)
+            .sample(5000, TimeUnit.MILLISECONDS )
+            .subscribe(object: Observer<Long> {
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(SAMPLE_OPERATOR, "onSubscribe")
+                }
+                override fun onNext(t: Long) {
+                    Log.i(SAMPLE_OPERATOR, "onNext $t")
+                }
+                override fun onComplete() {
+                    Log.i(SAMPLE_OPERATOR, "onComplete")
+                }
+                override fun onError(e: Throwable) {
+                    Log.i(SAMPLE_OPERATOR, "onError, " + e.message)
+                }
+            })
+    }
+
     //endregion
 
     //region CONDITIONAL OPERATORS
@@ -539,10 +629,10 @@ class OperatorsActivity : AppCompatActivity() {
 
     //region UTILITY OPERATORS
     /**
-     *
+     * https://reactivex.io/documentation/operators/delay.html
      */
     private fun delayOperator() {
-        Observable.just("a", "b", "c")
+        Observable.just("a", "b", "c", "d", "e")
             .delay(2, TimeUnit.SECONDS)
             .subscribe(object : Observer<String>{
                 override fun onSubscribe(d: Disposable) {
@@ -555,7 +645,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.d(DELAY_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.d(DELAY_OPERATOR, "onError" + e.message)
+                    Log.d(DELAY_OPERATOR, "onError, " + e.message)
                 }
             })
     }
@@ -598,40 +688,5 @@ class OperatorsActivity : AppCompatActivity() {
         return remoteDataSource.getPeople(number)
     }
 
-    //region REQUESTS
-
-    /*private fun makeRequestWithRxJava() {
-
-        *//*
-    When OkHttp client receives a response from the server, it passes the response back to Retrofit.
-    Retrofit then does its magic: it pushes the meaningless response bytes through converters and wraps
-    it into a usable response with meaningful Java objects. This resource-intensive process is still
-    done on a background thread. Finally, when everything is ready Retrofit needs to return the result
-    to the UI thread of your Android app.
-    The action of returning from the background thread, which receives and prepares
-    the result, to the Android UI thread is a call adapter!
-     *//*
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://swapi.dev")
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-        val service = retrofit.create(SwApiService::class.java)
-
-        disposable = service.getPersonObservable("1")
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe { showMessage("doOnSubscribe") }
-            .doOnComplete { showMessage("doOnCompleted") }
-            .subscribe(
-                { showResult(it)}, { showError(it) }
-            )
-    }*/
-
     //endregion
-
-    private fun setMessage(message: String) {
-        binding.textResponse.text = message
-    }
 }

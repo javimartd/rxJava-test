@@ -153,6 +153,12 @@ class BaseClassesActivity : AppCompatActivity() {
      * Observer is not able to handle this data emission. This is known as Back Pressure.
      *
      * http://reactivex.io/RxJava/3.x/javadoc/io/reactivex/rxjava3/core/Flowable.html
+     *
+     * Backpressure is the concept that an observable is emitting items faster than the consumer
+     * can handle them. Flowable take this into consideration and let you specify a Backpressure
+     * strategy to tell the Flowable how you want the Consumer the handle items emitted faster
+     * that can be consumed.
+     *
      */
     fun flowable() {
         /*

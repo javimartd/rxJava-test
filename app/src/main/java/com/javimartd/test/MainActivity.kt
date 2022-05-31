@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.javimartd.test.databinding.ActivityMainBinding
 import com.javimartd.test.rx.BaseClassesActivity
 import com.javimartd.test.rx.OperatorsActivity
+import com.javimartd.test.rx.SubjectsActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,6 +22,9 @@ class MainActivity : AppCompatActivity() {
         }
         binding.buttonOperators.setOnClickListener {
             startActivity(Intent(this, OperatorsActivity::class.java))
+        }
+        binding.buttonSubjects.setOnClickListener {
+            startActivity(Intent(this, SubjectsActivity::class.java))
         }
     }
 }

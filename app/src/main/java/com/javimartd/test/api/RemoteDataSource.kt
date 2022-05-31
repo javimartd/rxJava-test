@@ -8,6 +8,7 @@ import okhttp3.Request
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 class RemoteDataSource: DataSource {
 
@@ -20,10 +21,10 @@ class RemoteDataSource: DataSource {
     private val service = retrofit.create(SwApiService::class.java)
 
     override fun getPeople(number: String): Observable<People> {
-        return service.getPeople(number)
+        return service.getPeople(number).delay(3000, TimeUnit.MILLISECONDS)
     }
 
-    override fun getStarship(number: String): Single<Starship> {
+    override fun getStarship(number: String): Observable<Starship> {
         return service.getStarship(number)
     }
 

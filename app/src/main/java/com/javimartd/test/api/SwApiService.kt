@@ -10,7 +10,7 @@ interface SwApiService {
     fun getPeople(@Path("number") number: String): Observable<People>
 
     @GET("starships/{number}")
-    fun getStarship(@Path("person") number: String): Single<Starship>
+    fun getStarship(@Path("number") number: String): Single<Starship>
 
     @GET("planets/{number}")
     fun getPlanet(@Path("number") number: String): Single<Planet>

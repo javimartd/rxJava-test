@@ -1,19 +1,36 @@
 package com.javimartd.test.rx
 
+import android.os.Bundle
 import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
+import com.javimartd.test.databinding.ActivitySubjectsBinding
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.subjects.*
 
-object Subjects {
+class SubjectsActivity : AppCompatActivity() {
 
-    private const val FIRST_OBSERVER_ON_NEXT = "Observer 1 onNext: "
-    private const val SECOND_OBSERVER_ON_NEXT = "Observer 2 onNext: "
-    private const val PUBLISH_SUBJECT = "publish subject"
-    private const val BEHAVIOR_SUBJECT = "behavior subject"
-    private const val REPLAY_SUBJECT = "replay subject"
-    private const val ASYNC_SUBJECT = "async subject"
-    private const val UNICAST_SUBJECT = "unicast subject"
+    companion object {
+        private const val FIRST_OBSERVER_ON_NEXT = "Observer 1 onNext: "
+        private const val SECOND_OBSERVER_ON_NEXT = "Observer 2 onNext: "
+        private const val PUBLISH_SUBJECT = "publish subject"
+        private const val BEHAVIOR_SUBJECT = "behavior subject"
+        private const val REPLAY_SUBJECT = "replay subject"
+        private const val ASYNC_SUBJECT = "async subject"
+        private const val UNICAST_SUBJECT = "unicast subject"
+    }
+
+    private lateinit var binding: ActivitySubjectsBinding
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivitySubjectsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        binding.buttonRun.setOnClickListener {
+
+        }
+    }
 
     fun usoOfSubject() {
         val observable = Observable

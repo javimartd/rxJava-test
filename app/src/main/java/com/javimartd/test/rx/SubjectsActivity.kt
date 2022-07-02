@@ -4,21 +4,14 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.javimartd.test.databinding.ActivitySubjectsBinding
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.schedulers.Schedulers
+import io.reactivex.rxjava3.core.Observer
+import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.*
 
+/**
+ * https://reactivex.io/documentation/subject.html
+ */
 class SubjectsActivity : AppCompatActivity() {
-
-    companion object {
-        private const val FIRST_OBSERVER_ON_NEXT = "Observer 1 onNext: "
-        private const val SECOND_OBSERVER_ON_NEXT = "Observer 2 onNext: "
-        private const val PUBLISH_SUBJECT = "publish subject"
-        private const val BEHAVIOR_SUBJECT = "behavior subject"
-        private const val REPLAY_SUBJECT = "replay subject"
-        private const val ASYNC_SUBJECT = "async subject"
-        private const val UNICAST_SUBJECT = "unicast subject"
-    }
 
     private lateinit var binding: ActivitySubjectsBinding
 
@@ -28,178 +21,183 @@ class SubjectsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.buttonRun.setOnClickListener {
-
+            unicastSubject()
         }
     }
 
-    fun usoOfSubject() {
-        val observable = Observable
-            .range(1, 5)
-            .subscribeOn(Schedulers.io())
-            .map { item -> run {
-                Log.i("Squaring with itself", item.toString())
-                item * item
-            }}
-
-        val replaySubject = ReplaySubject.create<Int>()
-
-        observable.subscribe(replaySubject)
-
-        /*
-          You can see from the output that the map() operation only takes place once, even if there are 2 subscribers.
-          So if we have 10 subscribers, the map() operation will take place only once.
-         */
-        replaySubject.subscribe{item -> Log.i("Subject one: ", item.toString())}
-        replaySubject.subscribe{item -> Log.i("Subject two: ", item.toString())}
-        replaySubject.subscribe{item -> Log.i("Subject three: ", item.toString())}
-    }
-
     /**
-     * PublishSubject emits all the items at the point of subscription.
-     * This is the most basic form of Subject.
+     * It emits all the items at the point of subscription.
      */
-    fun publishSubject() {
-        val publishSubject = PublishSubject.create<Int>()
+    private fun publishSubject() {
 
-        /*publishSubject.subscribe(object : Observer<Int>{
-            override fun onComplete() {}
-            override fun onSubscribe(d: Disposable) {}
-            override fun onNext(t: Int) {}
-            override fun onError(e: Throwable) {}
-        })*/
+        val publishSubject = PublishSubject.create<Double>()
 
-        publishSubject.onNext(0)
+        publishSubject
+            .subscribe(object : Observer<Double> {
+                override fun onComplete() {
+                    Log.i(PUBLISH_SUBJECT, "onComplete")
+                }
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(PUBLISH_SUBJECT, "onSubscribe")
+                }
+                override fun onNext(t: Double) {
+                    Log.i(PUBLISH_SUBJECT, "onNext, $t")
+                }
+                override fun onError(e: Throwable) {
+                    Log.i(PUBLISH_SUBJECT, "onError, ${e.message}")
+                }
+            })
 
-        /*publishSubject.subscribe(
-            { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(PUBLISH_SUBJECT, it.toString()) },
-            { Log.i(PUBLISH_SUBJECT, "onComplete") },
-            { Log.i(PUBLISH_SUBJECT, "onSubscribe") }
-        )*/
+        publishSubject.onNext(0.0)
+        publishSubject.onNext(1.0)
 
-        publishSubject.onNext(1)
-        publishSubject.onNext(2)
+        publishSubject
+            .subscribe(object : Observer<Double> {
+                override fun onComplete() {
+                    Log.i(PUBLISH_SUBJECT, "onComplete")
+                }
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(PUBLISH_SUBJECT, "onSubscribe")
+                }
+                override fun onNext(t: Double) {
+                    Log.i(PUBLISH_SUBJECT, "onNext, $t")
+                }
+                override fun onError(e: Throwable) {
+                    Log.i(PUBLISH_SUBJECT, "onError, ${e.message}")
+                }
+            })
 
-        /*publishSubject.subscribe(
-            { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(PUBLISH_SUBJECT + "2", it.toString()) },
-            { Log.i(PUBLISH_SUBJECT + "2", "onComplete") },
-            { Log.i(PUBLISH_SUBJECT + "2", "onSubscribe") }
-        )*/
+        publishSubject.onNext(2.0)
+        publishSubject.onNext(3.0)
+        publishSubject.onNext(4.0)
 
-        publishSubject.onNext(3)
-        publishSubject.onNext(4)
+        // share exactly the same data stream with all subscriptions
+        publishSubject.onNext(Math.random())
     }
 
     /**
-     * BehaviorSubject prints the most recently emitted value before the subscription
-     * and all the values after the subscription.
-     *
-     * Difference between PublishSubject and BehaviorSubject is that PublishSubject prints all values
-     * after subscription and BehaviorSubject prints the last emitted value before subscription and all
-     * the values after subscription.
+     * It emits the item most recently emitted by the source
      */
     private fun behaviorSubject() {
-        /*
-          Difference between PublishSubject and BehaviorSubject is that PublishSubject prints all values after
-          subscription and BehaviorSubject prints the last emitted value before subscription and all the
-          values after subscription.
-         */
+
         val behaviorSubject = BehaviorSubject.create<Int>()
+
         behaviorSubject.onNext(0)
-        /*behaviorSubject.subscribe(
-            { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(BEHAVIOR_SUBJECT, it.toString()) },
-            { Log.i(BEHAVIOR_SUBJECT, "onComplete") },
-            { Log.i(BEHAVIOR_SUBJECT, "onSubscribe") }
-        )*/
         behaviorSubject.onNext(1)
         behaviorSubject.onNext(2)
-        /*behaviorSubject.subscribe(
-            { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(BEHAVIOR_SUBJECT + "2", it.toString()) },
-            { Log.i(BEHAVIOR_SUBJECT + "2", "onComplete") },
-            { Log.i(BEHAVIOR_SUBJECT + "2", "onSubscribe") }
-        )*/
-        behaviorSubject.onNext(3)
-        behaviorSubject.onNext(4)
+
+        behaviorSubject.subscribe{
+            Log.i(BEHAVIOR_SUBJECT, "onNext, $it")
+        }
     }
 
     /**
-     * ReplaySubject emits all the items of the Observable, regardless of when the subscriber subscribes.
+     * It emits all the items of the source, regardless of when the subscriber subscribes.
      */
-    fun replaySubject() {
-        val replaySubject = ReplaySubject.create<Int>()
-        replaySubject.onNext(0)
-        /*replaySubject.subscribe(
-            { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(REPLAY_SUBJECT, it.toString()) },
-            { Log.i(REPLAY_SUBJECT, "onComplete") },
-            { Log.i(REPLAY_SUBJECT, "onSubscribe") }
-        )*/
-        replaySubject.onNext(1)
-        replaySubject.onNext(2)
-        /*replaySubject.subscribe(
-            { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(REPLAY_SUBJECT + "2", it.toString()) },
-            { Log.i(REPLAY_SUBJECT + "2", "onComplete") },
-            { Log.i(REPLAY_SUBJECT + "2", "onSubscribe") }
-        )*/
-        replaySubject.onNext(3)
-        replaySubject.onNext(4)
+    private fun replaySubject() {
+
+        val replaySubject = ReplaySubject.create<String>()
+
+        replaySubject.onNext("a")
+        replaySubject.onNext("b")
+        replaySubject.onNext("c")
+
+        replaySubject
+            .subscribe(object : Observer<String> {
+                override fun onComplete() {
+                    Log.i(REPLAY_SUBJECT, "onComplete")
+                }
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(REPLAY_SUBJECT, "onSubscribe")
+                }
+                override fun onNext(t: String) {
+                    Log.i(REPLAY_SUBJECT, "onNext, $t")
+                }
+                override fun onError(e: Throwable) {
+                    Log.i(REPLAY_SUBJECT, "onError, ${e.message}")
+                }
+            })
+
+        replaySubject.onNext("d")
+
+        replaySubject
+            .subscribe(object : Observer<String> {
+                override fun onComplete() {
+                    Log.i(REPLAY_SUBJECT, "onComplete")
+                }
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(REPLAY_SUBJECT, "onSubscribe")
+                }
+                override fun onNext(t: String) {
+                    Log.i(REPLAY_SUBJECT, "onNext, $t")
+                }
+                override fun onError(e: Throwable) {
+                    Log.i(REPLAY_SUBJECT, "onError, ${e.message}")
+                }
+            })
+
+        replaySubject.onNext("e")
     }
 
     /**
-     * AsyncSubject emits only the last value of the Observable and this only happens after the Observable completes.
+     * It emits only the last value of the source and this only happens after the source completes.
      */
-    fun asyncSubject() {
+    private fun asyncSubject() {
+
         val asyncSubject = AsyncSubject.create<Int>()
+
         asyncSubject.onNext(0)
-        /*asyncSubject.subscribe(
-            { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(ASYNC_SUBJECT, it.toString()) },
-            { Log.i(ASYNC_SUBJECT, "onComplete") },
-            { Log.i(ASYNC_SUBJECT, "onSubscribe") }
-        )*/
+
+        asyncSubject
+            .subscribe(object : Observer<Int> {
+                override fun onComplete() {
+                    Log.i(ASYNC_SUBJECT, "onComplete")
+                }
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(ASYNC_SUBJECT, "onSubscribe")
+                }
+                override fun onNext(t: Int) {
+                    Log.i(ASYNC_SUBJECT, "onNext, $t")
+                }
+                override fun onError(e: Throwable) {
+                    Log.i(ASYNC_SUBJECT, "onError, ${e.message}")
+                }
+            })
+
         asyncSubject.onNext(1)
         asyncSubject.onNext(2)
-        /*asyncSubject.subscribe(
-            { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(ASYNC_SUBJECT + "2", it.toString()) },
-            { Log.i(ASYNC_SUBJECT + "2", "onComplete") },
-            { Log.i(ASYNC_SUBJECT + "2", "onSubscribe") }
-        )*/
-        asyncSubject.onNext(3)
-        asyncSubject.onNext(4)
 
-        /*
-         This is very important in AsyncSubject
-         Only after onComplete() is called, the last emitted value is printed by both Observers.
-         */
         asyncSubject.onComplete()
     }
 
     /**
-     * UnicastSubject allows only a single subscriber and it emits all the items regardless of the time of subscription.
+     *  It allows only a single subscriber and buffers all emissions it receives until an Observer
+     *  subscribes to it, and releases all these emissions to the Observer and clear its cache.
      */
-    fun unicastSubject() {
+    private fun unicastSubject() {
+
         val unicastSubject = UnicastSubject.create<Int>()
+
         unicastSubject.onNext(0)
-        /*unicastSubject.subscribe(
-            { Log.i(FIRST_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(UNICAST_SUBJECT, it.toString()) },
-            { Log.i(UNICAST_SUBJECT, "onComplete") },
-            { Log.i(UNICAST_SUBJECT, "onSubscribe") }
-        )*/
         unicastSubject.onNext(1)
         unicastSubject.onNext(2)
-        /*unicastSubject.subscribe(
-            { Log.i(SECOND_OBSERVER_ON_NEXT, it.toString()) },
-            { Log.i(UNICAST_SUBJECT + "2", it.toString()) },
-            { Log.i(UNICAST_SUBJECT + "2", "onComplete") },
-            { Log.i(UNICAST_SUBJECT + "2", "onSubscribe") }
-        )*/
+
+        unicastSubject
+            .subscribe(object : Observer<Int> {
+                override fun onComplete() {
+                    Log.i(UNICAST_SUBJECT, "onComplete")
+                }
+                override fun onSubscribe(d: Disposable) {
+                    Log.i(UNICAST_SUBJECT, "onSubscribe")
+                }
+                override fun onNext(t: Int) {
+                    Log.i(UNICAST_SUBJECT, "onNext, $t")
+                }
+                override fun onError(e: Throwable) {
+                    Log.i(UNICAST_SUBJECT, "onError, ${e.message}")
+                }
+            })
+
         unicastSubject.onNext(3)
-        unicastSubject.onNext(4)
     }
 }

@@ -1,0 +1,7 @@
+package com.javimartd.test.rx
+
+const val PUBLISH_SUBJECT = "PUBLISH_SUBJECT"
+const val BEHAVIOR_SUBJECT = "BEHAVIOR_SUBJECT"
+const val REPLAY_SUBJECT = "REPLAY_SUBJECT"
+const val ASYNC_SUBJECT = "ASYNC_SUBJECT"
+const val UNICAST_SUBJECT = "UNICAST_SUBJECT"

@@ -21,10 +21,11 @@ class RemoteDataSource: DataSource {
     private val service = retrofit.create(SwApiService::class.java)
 
     override fun getPeople(number: String): Observable<People> {
-        return service.getPeople(number).delay(3000, TimeUnit.MILLISECONDS)
+        return service.getPeople(number)
+            .delay(3000, TimeUnit.MILLISECONDS)
     }
 
-    override fun getStarship(number: String): Observable<Starship> {
+    override fun getStarship(number: String): Single<Starship> {
         return service.getStarship(number)
     }
 

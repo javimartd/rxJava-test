@@ -11,17 +11,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="Run Operator"
-        app:layout_constraintEnd_toStartOf="@+id/buttonEmit"
+        android:text="Run"
+        app:layout_constraintEnd_toStartOf="@+id/buttonObservable"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/buttonEmit"
+        android:id="@+id/buttonObservable"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Emit"
+        android:text="Observable"
         app:layout_constraintBottom_toBottomOf="@+id/buttonOperator"
         app:layout_constraintEnd_toStartOf="@+id/buttonCancel"
         app:layout_constraintHorizontal_bias="0.5"
@@ -36,7 +36,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintTop_toTopOf="@+id/buttonOperator"
-        app:layout_constraintStart_toEndOf="@+id/buttonEmit" />
+        app:layout_constraintStart_toEndOf="@+id/buttonObservable" />
 
     <TextView
         android:id="@+id/textResponse"

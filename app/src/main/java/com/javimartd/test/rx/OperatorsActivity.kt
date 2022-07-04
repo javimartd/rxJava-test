@@ -2,22 +2,25 @@ package com.javimartd.test.rx
 
 import android.content.Intent
 import android.os.Bundle
-import android.text.format.Time
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.javimartd.test.EmptyActivity
-import com.javimartd.test.api.*
 import com.javimartd.test.databinding.ActivityOperatorsBinding
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.*
+import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.core.Observer
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.functions.BiFunction
 import io.reactivex.rxjava3.functions.Consumer
+import io.reactivex.rxjava3.functions.Function
 import io.reactivex.rxjava3.schedulers.Schedulers
-import org.reactivestreams.Subscription
+import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.random.Random
+import android.R.integer
+import com.javimartd.test.api.*
+
 
 class OperatorsActivity : AppCompatActivity() {
 
@@ -25,7 +28,6 @@ class OperatorsActivity : AppCompatActivity() {
 
     private lateinit var disposable: Disposable
     private lateinit var compositeDisposable: CompositeDisposable
-    private lateinit var buttonEmitObservable: Observable<Int>
 
     private lateinit var remoteDataSource: DataSource
 
@@ -35,7 +37,7 @@ class OperatorsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         binding.buttonOperator.setOnClickListener {
-            mergeOperator()
+            groupByOperator()
         }
         binding.buttonCancel.setOnClickListener {
             if (!disposable.isDisposed) {
@@ -46,7 +48,7 @@ class OperatorsActivity : AppCompatActivity() {
             startActivity(Intent(this, EmptyActivity::class.java))
         }
 
-        createButtonObservable()
+        createObservableButton()
 
         remoteDataSource = RemoteDataSource()
     }
@@ -77,16 +79,16 @@ class OperatorsActivity : AppCompatActivity() {
         binding.textResponse.text = message
     }
 
-    private fun createButtonObservable() {
+    private fun createObservableButton() {
         var counter = 0
         disposable = Observable.create<Int> { emitter ->
-            binding.buttonEmit.setOnClickListener {
+            binding.buttonObservable.setOnClickListener {
                 emitter.onNext(counter)
                 counter++
             }
             emitter.setCancellable {
                 // setCancelable method will fire when the observable is unsubscribed.
-                binding.buttonEmit.setOnClickListener(null)
+                binding.buttonObservable.setOnClickListener(null)
             }
         }.subscribe(object : Consumer<Int> {
             // This interface is handy when you want to set up a simple subscription to an Observable.
@@ -126,7 +128,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(CREATE_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(CREATE_OPERATOR, "onError, " + e.message)
+                    Log.i(CREATE_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
@@ -135,7 +137,7 @@ class OperatorsActivity : AppCompatActivity() {
      * https://reactivex.io/documentation/operators/just.html
      */
     private fun justOperator() {
-        Observable.just(1,2,3,4, 5)
+        Observable.just(1,2,3,4,5)
             .subscribe(object: Observer<Int> {
                 override fun onSubscribe(d: Disposable) {
                     Log.i(JUST_OPERATOR, "onSubscribe")
@@ -147,7 +149,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(JUST_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(JUST_OPERATOR, "onError, " + e.message)
+                    Log.i(JUST_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
@@ -168,23 +170,9 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(FROM_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(FROM_OPERATOR, "onError, " + e.message)
+                    Log.i(FROM_OPERATOR, "onError, ${e.message}")
                 }
             })
-    }
-
-    /**
-     *
-     */
-    private fun fromCallableOperator() {
-        disposable = Observable.fromCallable {
-            // do something and return
-            return@fromCallable "Hi!"
-        }
-            .subscribeOn(Schedulers.io())
-            .subscribe {
-                Log.d(FROM_CALLABLE_OPERATOR, it)
-            }
     }
 
     /**
@@ -203,7 +191,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(TIMER_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(TIMER_OPERATOR, "onError, " + e.message)
+                    Log.i(TIMER_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
@@ -225,7 +213,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(INTERVAL_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(INTERVAL_OPERATOR, "onError, " + e.message)
+                    Log.i(INTERVAL_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
@@ -246,7 +234,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(RANGE_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(RANGE_OPERATOR, "onError, " + e.message)
+                    Log.i(RANGE_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
@@ -268,7 +256,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(REPEAT_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(REPEAT_OPERATOR, "onError, " + e.message)
+                    Log.i(REPEAT_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
@@ -292,18 +280,21 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(REPEAT_WHEN_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(REPEAT_WHEN_OPERATOR, "onError, " + e.message)
+                    Log.i(REPEAT_WHEN_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
 
     /**
-     * This operator does not create the Observable until the Observer subscribes.
-     * The only downside to defer() is that it creates a new Observable each time you
-     * get a new Observer.
+     * https://reactivex.io/documentation/operators/defer.html
      */
     private fun deferOperator() {
-
+        var film = "Episode V – The Empire Strikes "
+        val deferObservable = Observable.defer { Observable.just(film) }
+        film = "Episode IV – A New Hope"
+        deferObservable.subscribe {
+            Log.i(DEFER_OPERATOR, "onNext, $it")
+        }
     }
 
     //endregion
@@ -317,24 +308,6 @@ class OperatorsActivity : AppCompatActivity() {
             .map { number -> number * number }
             .subscribe {
                 Log.i(MAP_OPERATOR, "onNext, $it")
-            }
-    }
-
-    /**
-     *
-     */
-    private fun groupByOperator() {
-        val observable = Observable.just(
-            People("Luke", "male"),
-            People ("C130", "N/A"),
-            People ("Pade", "female")
-        )
-        disposable = observable
-            .groupBy {
-                it.gender == "male"
-            }
-            .subscribe {
-                Log.i(GROUP_BY_OPERATOR, "")
             }
     }
 
@@ -364,6 +337,26 @@ class OperatorsActivity : AppCompatActivity() {
             }
     }
 
+    /**
+     * https://reactivex.io/documentation/operators/groupby.html
+     */
+    private fun groupByOperator() {
+        val observable = Observable.just(
+            People("Luke", "male"),
+            People ("C130", "N/A"),
+            People ("Pade", "female")
+        )
+        observable
+            .groupBy { it.gender == "male" }
+            .subscribe {
+                if (it.key == true) {
+                    it.subscribe { people ->
+                        Log.i(GROUP_BY_OPERATOR, "onNext, $people")
+                    }
+                }
+            }
+    }
+
     //endregion
 
     //region COMBINING OBSERVABLES
@@ -377,6 +370,7 @@ class OperatorsActivity : AppCompatActivity() {
         val secondObservable = Observable
             .interval(500, TimeUnit.MILLISECONDS)
             .take(10)
+
         Observable.merge(
             firstObservable,
             secondObservable
@@ -393,7 +387,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.d(MERGE_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.d(MERGE_OPERATOR, "onError, " + e.message)
+                    Log.d(MERGE_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
@@ -404,10 +398,10 @@ class OperatorsActivity : AppCompatActivity() {
      */
     private fun zipOperator() {
 
-        val single1 = remoteDataSource.getPlanet("2")
+        val single1 = remoteDataSource.getStarship("1")
         val single2 = remoteDataSource.getPlanet("5")
 
-        single1.zipWith(single2, BiFunction { s1: Planet, s2: Planet -> "$s1 $s2" })
+        single1.zipWith(single2, BiFunction { s1: Starship, s2: Planet -> "$s1 $s2" })
 
         /*Observable.pa(
             remoteDataSource.getPeople("5"),
@@ -426,30 +420,61 @@ class OperatorsActivity : AppCompatActivity() {
     }
 
     /**
-     *
+     * https://reactivex.io/documentation/operators/concat.html
      */
     private fun concatOperator() {
-        val observable1 = Observable.just(1, 2, 3)
-        val observable2 = Observable.just(4, 5, 6)
-        Observable.concat(observable1, observable2)
+        val firstObservable = Observable.just(1, 2, 3)
+        val secondObservable = Observable.just("a", "b", "c", "d", "e")
+        val thirdObservable3 = Observable.just(4, 5, 6)
+
+        Observable.concat(
+            firstObservable,
+            secondObservable,
+            thirdObservable3
+        )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(object : Observer<Int>{
-                override fun onComplete() {
-                    Log.d(CONCAT_OPERATOR, "onComplete")
-                }
+            .subscribe(object : Observer<Any>{
                 override fun onSubscribe(d: Disposable) {
-                    Log.d(CONCAT_OPERATOR, "onSubscribe")
+                    Log.i(CONCAT_OPERATOR, "onSubscribe")
                 }
-                override fun onNext(t: Int) {
-                    Log.d(CONCAT_OPERATOR, t.toString())
+                override fun onNext(t: Any) {
+                    Log.i(CONCAT_OPERATOR, "onNext, $t")
+                }
+                override fun onComplete() {
+                    Log.i(CONCAT_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.d(CONCAT_OPERATOR, "onError" + e.message)
+                    Log.i(CONCAT_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
 
+    /**
+     * https://reactivex.io/documentation/operators/combinelatest.html
+     */
+    private fun combineLatestOperator() {
+
+        val firstObservable = Observable.just(1,2,3)
+        val secondObservable = Observable.just(4,5,6)
+
+        Observable.combineLatest(firstObservable, secondObservable) { first, second ->
+            "$first $second"
+        }.subscribe(object: Observer<Any>{
+            override fun onSubscribe(d: Disposable) {
+                Log.i(COMBINE_LATEST_OPERATOR, "onSubscribe")
+            }
+            override fun onNext(t: Any) {
+                Log.i(COMBINE_LATEST_OPERATOR, "onNext, $t")
+            }
+            override fun onComplete() {
+                Log.i(COMBINE_LATEST_OPERATOR, "onComplete")
+            }
+            override fun onError(e: Throwable) {
+                Log.i(COMBINE_LATEST_OPERATOR, "onError, ${e.message}")
+            }
+        })
+    }
     //endregion
 
     //region FILTERING OBSERVABLES
@@ -483,7 +508,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(SKIP_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(SKIP_OPERATOR, "onError, " + e.message)
+                    Log.i(SKIP_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
@@ -502,7 +527,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(FIRST_OPERATOR, "onSuccess, $t")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(FIRST_OPERATOR, "onError, " + e.message)
+                    Log.i(FIRST_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
@@ -521,33 +546,41 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(LAST_OPERATOR, "onSuccess, $t")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(LAST_OPERATOR, "onError, " + e.message)
+                    Log.i(LAST_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
 
     /**
-     * With this operator the decision on whether the item should be filtered out is made not
-     * based on what the item is, but based on when the item was emitted.
-     * Debounce operator only emit an item from an Observable if a particular time has passed
-     * without it emitting another item.
+     * https://reactivex.io/documentation/operators/debounce.html
      */
     private fun debounceOperator() {
-        buttonEmitObservable
-            .debounce(2000, TimeUnit.MILLISECONDS)
-            .subscribe {
-                Log.i(DEBOUNCE_OPERATOR, it.toString())
-            }
+        Observable
+            .interval(4, TimeUnit.SECONDS)
+            .take(20)
+            .debounce(2, TimeUnit.SECONDS)
+            .subscribe(object: Observer<Long>{
+                override fun onSubscribe(d: Disposable) {
+                    disposable = d
+                    Log.i(DEBOUNCE_OPERATOR, "onSubscribe")
+                }
+                override fun onNext(t: Long) {
+                    Log.i(DEBOUNCE_OPERATOR, "onNext, $t")
+                }
+                override fun onError(e: Throwable) {
+                    Log.i(DEBOUNCE_OPERATOR, "onError, ${e.message}")
+                }
+                override fun onComplete() {
+                    Log.i(DEBOUNCE_OPERATOR, "onComplete")
+                }
+            })
     }
 
     /**
-     * This operator suppress duplicate items emitted by an Observable.
-     *
-     * In order to work with a custom dataType, we need to override the equals() and
-     * hashCode() methods.
+     * https://reactivex.io/documentation/operators/distinct.html
      */
     private fun distinctOperator() {
-        Observable.just("Hi","hi","hello","Cheers", "Wa!")
+        Observable.just(1,2,2,3,3,3,4,5)
             .distinct()
             .subscribe {
                 Log.i(DISTINCT_OPERATOR, it.toString())
@@ -571,7 +604,7 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(TAKE_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(TAKE_OPERATOR, "onError, " + e.message)
+                    Log.i(TAKE_OPERATOR, "onError, ${e.message}")
                 }
             })
     }
@@ -594,35 +627,9 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.i(SAMPLE_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.i(SAMPLE_OPERATOR, "onError, " + e.message)
+                    Log.i(SAMPLE_OPERATOR, "onError, ${e.message}")
                 }
             })
-    }
-
-    //endregion
-
-    //region CONDITIONAL OPERATORS
-    /**
-     * Is used when you have two or more observables that they are going to return the same type
-     * but you just wanna be notified as soon as the first one start emitting items.
-     *
-     * AMB subscribes both at the same time and waits for the first one to emit.
-     *
-     * If any of the operators are blocking, the other operators will get blocked and will not
-     * executed and that blocking operation will complete, emitting that item. This defeats the
-     * purpose of AMB.
-     * So that means that all of your parameters to amb, which are observables, need to be
-     * asynchronous for amb to work correctly.
-     */
-    private fun ambOperator() {
-        /*disposable = Observable.ambArray(getObservablePeople("1"), getObservablePeople("2"))
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { showResult(it) },
-                { showError(it) },
-                { Log.d(AMB_OPERATOR, "onComplete") },
-                { Log.d(AMB_OPERATOR, "onSubscribe") })*/
     }
 
     //endregion
@@ -645,47 +652,9 @@ class OperatorsActivity : AppCompatActivity() {
                     Log.d(DELAY_OPERATOR, "onComplete")
                 }
                 override fun onError(e: Throwable) {
-                    Log.d(DELAY_OPERATOR, "onError, " + e.message)
+                    Log.d(DELAY_OPERATOR, "onError, ${e.message}")
                 }
             })
-    }
-
-    //endregion
-
-    private fun getObservablePeople(number: String): Observable<People> {
-        /*
-        Just operator says: whatever the value placed as the argument to observable.just is,I'll turn that into an observable.
-        This operator calls the onNext method and then immediately completes via onCompleted.
-
-        However, this code has a problem, this code will get executed as soon as the observable is created.
-        RxJava operators like Observable.just or Observable.from stored the value of the data in the operator when
-        it's created, not when the operator has been subscribed to. We don't want that because for example the
-        execution would happen on the main thread and block the UI.
-
-        We describe how you can easily take any expensive method and wrap the call inside an RxJava Observable using
-        the defer() operator. You can use Observable.defer() to wrap any method in an Observable so that we
-        can defer the execution of an expensive method until the correct time, and so that we can control which
-        threads are used to execute the method.
-
-        return Observable.just(getPeople())
-         */
-
-        /*
-        fromCallable/defer
-        The operators are very similar and both can be used to solve the same type of problem: converting an
-        expensive method call into an RxJava Observable.
-
-        fromCallable can result in writing less code and provides better error handling.
-
-        return Observable.fromCallable { getPeople() }
-         */
-
-        /*
-        So we need to tell RxJava to defer the creation
-        of the observable until we have someone who subscribes to it.
-         */
-        //return Observable.defer { Observable.just(getPerson(number)) }
-        return remoteDataSource.getPeople(number)
     }
 
     //endregion

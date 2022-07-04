@@ -2,40 +2,37 @@ package com.javimartd.test.rx
 
 // creating observables
 const val CREATE_OPERATOR = "CREATE_OPERATOR"
-const val JUST_OPERATOR = "JUST_OPERATOR"
+const val DEFER_OPERATOR = "DEFER_OPERATOR"
 const val FROM_OPERATOR = "FROM_OPERATOR"
-const val FROM_CALLABLE_OPERATOR = "from_callable_operator"
-const val TIMER_OPERATOR = "TIMER_OPERATOR"
 const val INTERVAL_OPERATOR = "INTERVAL_OPERATOR"
+const val JUST_OPERATOR = "JUST_OPERATOR"
 const val RANGE_OPERATOR = "RANGE_OPERATOR"
 const val REPEAT_OPERATOR = "REPEAT_OPERATOR"
 const val REPEAT_WHEN_OPERATOR = "REPEAT_WHEN_OPERATOR"
-const val DEFER_OPERATOR = "defer_operator"
+const val TIMER_OPERATOR = "TIMER_OPERATOR"
 
 // transforming observables
-const val MAP_OPERATOR = "MAP_OPERATOR"
-const val GROUP_BY_OPERATOR = "group_by_operator"
 const val FLAT_MAP_OPERATOR = "flat_map_operator"
+const val GROUP_BY_OPERATOR = "GROUP_BY_OPERATOR"
+const val MAP_OPERATOR = "MAP_OPERATOR"
+
+// filtering observables
+const val DEBOUNCE_OPERATOR = "DEBOUNCE_OPERATOR"
+const val DISTINCT_OPERATOR = "DISTINCT_OPERATOR"
+const val FILTER_OPERATOR = "FILTER_OPERATOR"
+const val FIRST_OPERATOR = "FIRST_OPERATOR"
+const val LAST_OPERATOR = "LAST_OPERATOR"
+const val SAMPLE_OPERATOR = "SAMPLE_OPERATOR"
+const val SKIP_OPERATOR = "SKIP_OPERATOR"
+const val TAKE_OPERATOR = "TAKE_OPERATOR"
 
 // combining observables
 const val MERGE_OPERATOR = "MERGE_OPERATOR"
 const val ZIP_OPERATOR = "zip_operator"
-const val CONCAT_OPERATOR = "concat_operator"
-const val COMBINE_LATEST_OPERATOR = "combine_latest_operator"
-const val JOIN_OPERATOR = "join_operator"
-
-// filtering observables
-const val FILTER_OPERATOR = "FILTER_OPERATOR"
-const val SKIP_OPERATOR = "SKIP_OPERATOR"
-const val FIRST_OPERATOR = "FIRST_OPERATOR"
-const val LAST_OPERATOR = "LAST_OPERATOR"
-const val TAKE_OPERATOR = "TAKE_OPERATOR"
-const val SAMPLE_OPERATOR = "SAMPLE_OPERATOR"
-const val DEBOUNCE_OPERATOR = "debounce_operator"
-const val DISTINCT_OPERATOR = "distinct_operator"
-
-// conditional operators
-const val AMB_OPERATOR = "amb_operator"
+const val COMBINE_LATEST_OPERATOR = "COMBINE_LATEST_OPERATOR"
 
 // utility operators
 const val DELAY_OPERATOR = "DELAY_OPERATOR"
+
+// Aggregate Operators
+const val CONCAT_OPERATOR = "CONCAT_OPERATOR"

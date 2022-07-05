@@ -1,7 +1,6 @@
 ### Test [RxJava][1]
 
-This project has been created to test RxJava with Android. 
-Feel free to use it to improve your knowledge and experience different functionalities.
+This project has been created in order to practice and learn the concepts of reactive programming with RxJava3 for Android. Feel free to use it to improve your knowledge and test the different features.
 
 ### Referencies
 [ReactiveX][2]

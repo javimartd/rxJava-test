@@ -27,9 +27,9 @@ const val SKIP_OPERATOR = "SKIP_OPERATOR"
 const val TAKE_OPERATOR = "TAKE_OPERATOR"
 
 // combining observables
-const val MERGE_OPERATOR = "MERGE_OPERATOR"
-const val ZIP_OPERATOR = "zip_operator"
 const val COMBINE_LATEST_OPERATOR = "COMBINE_LATEST_OPERATOR"
+const val MERGE_OPERATOR = "MERGE_OPERATOR"
+const val ZIP_OPERATOR = "ZIP_OPERATOR"
 
 // utility operators
 const val DELAY_OPERATOR = "DELAY_OPERATOR"

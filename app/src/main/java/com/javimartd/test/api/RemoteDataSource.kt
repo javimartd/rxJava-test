@@ -22,11 +22,11 @@ class RemoteDataSource: DataSource {
 
     override fun getPeople(number: String): Observable<People> {
         return service.getPeople(number)
-            .delay(3000, TimeUnit.MILLISECONDS)
     }
 
     override fun getStarship(number: String): Single<Starship> {
         return service.getStarship(number)
+            .delay(3000, TimeUnit.MILLISECONDS)
     }
 
     override fun getPlanet(number: String): Single<Planet> {
@@ -42,7 +42,7 @@ class RemoteDataSource: DataSource {
 
         var person = People()
         if (response.isSuccessful) {
-            person = Gson().fromJson(response.body?.charStream(), People::class.java)
+            person = Gson().fromJson(response.body.charStream(), People::class.java)
         }
         return person
     }
